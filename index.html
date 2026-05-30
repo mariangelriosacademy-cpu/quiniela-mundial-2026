@@ -334,6 +334,7 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--fondo); co
     <div id="alerta-pred"></div>
     <div class="tabs" id="pred-tabs">
       <button class="tab active" onclick="switchTab('grupos')">Grupos</button>
+      <button class="tab" onclick="switchTab('dieciseisavos')">Dieciseisavos</button>
       <button class="tab" onclick="switchTab('octavos')">Octavos</button>
       <button class="tab" onclick="switchTab('cuartos')">Cuartos</button>
       <button class="tab" onclick="switchTab('semis')">Semis</button>
@@ -350,6 +351,7 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--fondo); co
       <div id="grupos-container"></div>
       <button class="btn-accion" onclick="guardarFase('grupos')">💾 Guardar grupos</button>
     </div>
+    <div id="tab-dieciseisavos" class="tab-content"><div class="alerta alerta-info">Selecciona el ganador de cada partido de Dieciseisavos</div><div id="dieciseisavos-container"></div><button class="btn-accion" onclick="guardarFase('dieciseisavos')">💾 Guardar dieciseisavos</button></div>
     <div id="tab-octavos" class="tab-content"><div class="alerta alerta-info">Selecciona el ganador de cada partido</div><div id="octavos-container"></div><button class="btn-accion" onclick="guardarFase('octavos')">💾 Guardar octavos</button></div>
     <div id="tab-cuartos" class="tab-content"><div class="alerta alerta-info">Selecciona el ganador de cada partido</div><div id="cuartos-container"></div><button class="btn-accion" onclick="guardarFase('cuartos')">💾 Guardar cuartos</button></div>
     <div id="tab-semis" class="tab-content"><div class="alerta alerta-info">Selecciona el ganador de cada semifinal</div><div id="semis-container"></div><button class="btn-accion" onclick="guardarFase('semis')">💾 Guardar semifinales</button></div>
@@ -520,6 +522,24 @@ const GRUPOS = [
   {id:'L',nombre:'Grupo L',equipos:[{n:'Inglaterra',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿'},{n:'Croacia',f:'🇭🇷'},{n:'Ghana',f:'🇬🇭'},{n:'Panamá',f:'🇵🇦'}]}
 ];
 const TODOS_EQUIPOS = GRUPOS.flatMap(g=>g.equipos);
+const PARTIDOS_DIECISEISAVOS = [
+  {id:'D1',lbl:'2° Grupo A vs 2° Grupo B'},
+  {id:'D2',lbl:'1° Grupo C vs 2° Grupo F'},
+  {id:'D3',lbl:'1° Grupo E vs Mejor 3°'},
+  {id:'D4',lbl:'1° Grupo F vs 2° Grupo C'},
+  {id:'D5',lbl:'2° Grupo E vs 2° Grupo I'},
+  {id:'D6',lbl:'1° Grupo I vs Mejor 3°'},
+  {id:'D7',lbl:'1° Grupo A vs Mejor 3°'},
+  {id:'D8',lbl:'1° Grupo L vs Mejor 3°'},
+  {id:'D9',lbl:'1° Grupo G vs Mejor 3°'},
+  {id:'D10',lbl:'1° Grupo D vs Mejor 3°'},
+  {id:'D11',lbl:'1° Grupo H vs 2° Grupo J'},
+  {id:'D12',lbl:'2° Grupo K vs 2° Grupo L'},
+  {id:'D13',lbl:'1° Grupo B vs Mejor 3°'},
+  {id:'D14',lbl:'2° Grupo D vs 2° Grupo G'},
+  {id:'D15',lbl:'1° Grupo J vs 2° Grupo H'},
+  {id:'D16',lbl:'1° Grupo K vs Mejor 3°'},
+];
 const PARTIDOS_OCTAVOS = [{id:'O1',lbl:'1A vs 2B'},{id:'O2',lbl:'1C vs 2D'},{id:'O3',lbl:'1E vs 2F'},{id:'O4',lbl:'1G vs 2H'},{id:'O5',lbl:'1I vs 2J'},{id:'O6',lbl:'1K vs 2L'},{id:'O7',lbl:'2A vs 1B'},{id:'O8',lbl:'2C vs 1D'},{id:'O9',lbl:'2E vs 1F'},{id:'O10',lbl:'2G vs 1H'},{id:'O11',lbl:'2I vs 1J'},{id:'O12',lbl:'2K vs 1L'},{id:'O13',lbl:'Mejor 3ro (1)'},{id:'O14',lbl:'Mejor 3ro (2)'},{id:'O15',lbl:'Mejor 3ro (3)'},{id:'O16',lbl:'Mejor 3ro (4)'}];
 const PARTIDOS_CUARTOS = [{id:'C1',lbl:'Gan. O1 vs O2'},{id:'C2',lbl:'Gan. O3 vs O4'},{id:'C3',lbl:'Gan. O5 vs O6'},{id:'C4',lbl:'Gan. O7 vs O8'},{id:'C5',lbl:'Gan. O9 vs O10'},{id:'C6',lbl:'Gan. O11 vs O12'},{id:'C7',lbl:'Gan. O13 vs O14'},{id:'C8',lbl:'Gan. O15 vs O16'}];
 const PARTIDOS_SEMIS = [{id:'S1',lbl:'Semifinal 1'},{id:'S2',lbl:'Semifinal 2'},{id:'S3',lbl:'Semifinal 3'},{id:'S4',lbl:'Semifinal 4'}];
@@ -748,6 +768,7 @@ function abrirPredicciones(cedula,codigo){
   document.getElementById('pred-nombre-display').textContent=p.nombre;
   document.getElementById('pred-codigo-display').textContent='Tarjetón: '+codigo;
   renderGruposPredicciones();
+  renderPartidosPredicciones('dieciseisavos',PARTIDOS_DIECISEISAVOS,'dieciseisavos-container');
   renderPartidosPredicciones('octavos',PARTIDOS_OCTAVOS,'octavos-container');
   renderPartidosPredicciones('cuartos',PARTIDOS_CUARTOS,'cuartos-container');
   renderPartidosPredicciones('semis',PARTIDOS_SEMIS,'semis-container');
@@ -889,53 +910,24 @@ function guardarFase(fase){
   const fechaLimite=new Date('2026-06-10T23:59:59');
   if(new Date()>fechaLimite){mostrarAlerta('alerta-pred','🔒 El plazo venció el 10 de junio de 2026.','warn');return;}
   const pred=getPredicciones(tarjetonActual.codigo);
+
   if(fase==='grupos'){
-    // Validar clasificados de grupos que ya empezaron
+    // Validar que grupos con partidos ya iniciados tengan clasificados
     let gruposSinClasificados = [];
     GRUPOS.forEach(g => {
       const partidos = getPartidosGrupo(g);
       const algunoEmpezado = partidos.some(pa => partidoBloqueado(pa.local.n, pa.visita.n));
-      if(algunoEmpezado) {
+      if(algunoEmpezado){
         const c1 = document.getElementById(`g_${g.id}_c1`)?.value || '';
         const c2 = document.getElementById(`g_${g.id}_c2`)?.value || '';
         if(!c1 || !c2) gruposSinClasificados.push(g.nombre);
       }
     });
-    if(gruposSinClasificados.length > 0) {
-      mostrarAlerta('alerta-pred', `⚠️ Predicción incompleta — Selecciona los clasificados de: ${gruposSinClasificados.join(', ')}`, 'warn');
+    if(gruposSinClasificados.length > 0){
+      mostrarAlerta('alerta-pred',`⚠️ Predicción incompleta — Selecciona los clasificados de: ${gruposSinClasificados.join(', ')}`,'warn');
       return;
     }
-    // Validar primer partido (México vs Sudáfrica = Grupo A, índices 0 y 1 → id A_01)
-    // y clasificados del Grupo A
-    const marcadorMexLocal = document.getElementById('m_A_A_01_l')?.value ||
-                             document.getElementById('m_A_01_l')?.value || '';
-    const marcadorMexVisita = document.getElementById('m_A_A_01_v')?.value ||
-                              document.getElementById('m_A_01_v')?.value || '';
-    // Buscar el input del primer partido directamente
-    const grupoA = GRUPOS.find(g => g.id === 'A');
-    const partA = getPartidosGrupo(grupoA)[0]; // México vs Sudáfrica
-    const inputLocal = document.getElementById(`m_A_${partA.id}_l`);
-    const inputVisita = document.getElementById(`m_A_${partA.id}_v`);
-    const valLocal = inputLocal?.value || '';
-    const valVisita = inputVisita?.value || '';
-
-    // Leer clasificados del DOM o de predicciones guardadas (por si están disabled)
-    const predActual = getPredicciones(tarjetonActual.codigo);
-    const c1DOM = document.getElementById('g_A_c1')?.value || '';
-    const c2DOM = document.getElementById('g_A_c2')?.value || '';
-    const c1Guardado = predActual?.grupos?.A?.c1 || '';
-    const c2Guardado = predActual?.grupos?.A?.c2 || '';
-    const clasificado1A = c1DOM || c1Guardado;
-    const clasificado2A = c2DOM || c2Guardado;
-
-    if(!valLocal || !valVisita) {
-      mostrarAlerta('alerta-pred', '⚽ Para guardar debes predecir el primer partido: México vs Sudáfrica', 'warn');
-      return;
-    }
-    if(!clasificado1A || !clasificado2A) {
-      mostrarAlerta('alerta-pred', '🏅 Para guardar debes elegir el 1° y 2° clasificado del Grupo A', 'warn');
-      return;
-    }
+    // Guardar grupos
     pred.grupos={};
     GRUPOS.forEach(g=>{
       const marcadores={};
@@ -943,20 +935,62 @@ function guardarFase(fase){
         marcadores[pa.id+'_l']=document.getElementById(`m_${g.id}_${pa.id}_l`)?.value||'';
         marcadores[pa.id+'_v']=document.getElementById(`m_${g.id}_${pa.id}_v`)?.value||'';
       });
-      pred.grupos[g.id]={c1:document.getElementById(`g_${g.id}_c1`)?.value||'',c2:document.getElementById(`g_${g.id}_c2`)?.value||'',marcadores};
+      pred.grupos[g.id]={
+        c1:document.getElementById(`g_${g.id}_c1`)?.value||'',
+        c2:document.getElementById(`g_${g.id}_c2`)?.value||'',
+        marcadores
+      };
     });
-  }else if(['octavos','cuartos','semis'].includes(fase)){
-    const partidos=fase==='octavos'?PARTIDOS_OCTAVOS:fase==='cuartos'?PARTIDOS_CUARTOS:PARTIDOS_SEMIS;
-    pred[fase]={};
-    partidos.forEach(p=>{pred[fase][p.id]=document.getElementById(`p_${fase}_${p.id}`)?.value||'';});
+    setPredicciones(tarjetonActual.codigo,pred);
+    mostrarToast('✅ Predicciones de grupos guardadas');
+    actualizarProgreso();
+
+  }else if(fase==='dieciseisavos'){
+    pred.dieciseisavos={};
+    PARTIDOS_DIECISEISAVOS.forEach(p=>{
+      pred.dieciseisavos[p.id]=document.getElementById('o_'+p.id)?.value||'';
+    });
+    setPredicciones(tarjetonActual.codigo,pred);
+    mostrarToast('✅ Dieciseisavos guardados');
+    actualizarProgreso();
+
+  }else if(fase==='octavos'){
+    pred.octavos={};
+    PARTIDOS_OCTAVOS.forEach(p=>{
+      pred.octavos[p.id]=document.getElementById('o_'+p.id)?.value||'';
+    });
+    setPredicciones(tarjetonActual.codigo,pred);
+    mostrarToast('✅ Octavos guardados');
+    actualizarProgreso();
+
+  }else if(fase==='cuartos'){
+    pred.cuartos={};
+    PARTIDOS_CUARTOS.forEach(p=>{
+      pred.cuartos[p.id]=document.getElementById('o_'+p.id)?.value||'';
+    });
+    setPredicciones(tarjetonActual.codigo,pred);
+    mostrarToast('✅ Cuartos guardados');
+    actualizarProgreso();
+
+  }else if(fase==='semis'){
+    pred.semis={};
+    PARTIDOS_SEMIS.forEach(p=>{
+      pred.semis[p.id]=document.getElementById('o_'+p.id)?.value||'';
+    });
+    setPredicciones(tarjetonActual.codigo,pred);
+    mostrarToast('✅ Semifinales guardadas');
+    actualizarProgreso();
+
   }else if(fase==='final'){
-    pred.final={campeon:document.getElementById('pred-campeon')?.value||'',subcampeon:document.getElementById('pred-subcampeon')?.value||'',tercero:document.getElementById('pred-tercero')?.value||'',goleador:document.getElementById('pred-goleador')?.value||''};
+    pred.final=pred.final||{};
+    pred.final.campeon=document.getElementById('f_campeon')?.value||'';
+    pred.final.subcampeon=document.getElementById('f_subcampeon')?.value||'';
+    pred.final.tercero=document.getElementById('f_tercero')?.value||'';
+    pred.final.goleador=document.getElementById('f_goleador')?.value||'';
+    setPredicciones(tarjetonActual.codigo,pred);
+    mostrarToast('✅ Final y bonus guardados');
+    actualizarProgreso();
   }
-  setPredicciones(tarjetonActual.codigo,pred);
-  mostrarToast('✅ ¡Predicciones guardadas!');
-  document.getElementById('alerta-pred').innerHTML='';
-  actualizarProgreso();
-  cargarTarjetonView();
 }
 function actualizarProgreso(){
   if(!tarjetonActual)return;
