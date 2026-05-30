@@ -870,12 +870,20 @@ function guardarFase(fase){
   const pred=getPredicciones(tarjetonActual.codigo);
 
   if(fase==='grupos'){
-    // Validar SIEMPRE que todos los grupos tengan clasificados seleccionados
+    // Validar SIEMPRE los 12 grupos — leer del DOM o de predicciones guardadas
+    const predActual = getPredicciones(tarjetonActual.codigo);
     let gruposSinClasificados = [];
     GRUPOS.forEach(g => {
-      const c1 = document.getElementById(`g_${g.id}_c1`)?.value || '';
-      const c2 = document.getElementById(`g_${g.id}_c2`)?.value || '';
-      if(!c1 || !c2) gruposSinClasificados.push(g.nombre);
+      // Intentar leer del DOM primero, si está disabled leer de lo guardado
+      const selC1 = document.getElementById(`g_${g.id}_c1`);
+      const selC2 = document.getElementById(`g_${g.id}_c2`);
+      const c1DOM = selC1?.value || '';
+      const c2DOM = selC2?.value || '';
+      const c1Guardado = predActual?.grupos?.[g.id]?.c1 || '';
+      const c2Guardado = predActual?.grupos?.[g.id]?.c2 || '';
+      const c1Final = c1DOM || c1Guardado;
+      const c2Final = c2DOM || c2Guardado;
+      if(!c1Final || !c2Final) gruposSinClasificados.push(g.nombre);
     });
     if(gruposSinClasificados.length > 0){
       mostrarAlerta('alerta-pred',`⚠️ Predicción incompleta — Selecciona los clasificados de: ${gruposSinClasificados.join(', ')}`,'warn');
@@ -949,15 +957,12 @@ function guardarFase(fase){
 function actualizarProgreso(){
   if(!tarjetonActual)return;
   const pred=getPredicciones(tarjetonActual.codigo);
-  // Total: 12 grupos x 2 clasificados + 12 grupos x 6 partidos marcadores + octavos + cuartos + semis + final
-  const total = 12*2 + 16+8+4+4;
+  const total = 12*2 + 16+8+4+4; // clasificados + eliminatorias + final
   let c=0;
-  // Contar clasificados guardados
-  if(pred.grupos)c+=Object.values(pred.grupos).filter(g=>g.c1&&g.c2).length*2;
-  // Contar marcadores con al menos un valor
-  if(pred.grupos) Object.values(pred.grupos).forEach(g=>{
-    if(g.marcadores) Object.values(g.marcadores).forEach(v=>{ if(v!=='') c+=0.5; });
-  });
+  // Solo contar si hay predicciones realmente guardadas
+  if(pred.grupos){
+    c+=Object.values(pred.grupos).filter(g=>g.c1&&g.c2).length*2;
+  }
   if(pred.octavos)c+=Object.values(pred.octavos).filter(v=>v&&v!=='').length;
   if(pred.cuartos)c+=Object.values(pred.cuartos).filter(v=>v&&v!=='').length;
   if(pred.semis)c+=Object.values(pred.semis).filter(v=>v&&v!=='').length;
@@ -2388,9 +2393,14 @@ async function sincronizarDesdeSupabase() {
   try {
     const {data: parts} = await _supa.from('participantes').select('*');
     if(parts && parts.length > 0) {
-      const obj = {};
+      // Fusionar con localStorage — no borrar participantes eliminados localmente
+      const localParts = leer('q26_participantes', {});
+      const obj = {...localParts}; // Empezar con datos locales
       parts.forEach(p => {
-        obj[p.cedula] = {cedula:p.cedula, nombre:p.nombre, tel:p.tel, fechaReg:p.fecha_reg, tarjetones:p.tarjetones||[]};
+        // Solo agregar de Supabase si no fue eliminado localmente
+        if(!localParts || localParts[p.cedula] !== undefined || Object.keys(localParts).length === 0) {
+          obj[p.cedula] = {cedula:p.cedula, nombre:p.nombre, tel:p.tel, fechaReg:p.fecha_reg, tarjetones:p.tarjetones||[]};
+        }
       });
       localStorage.setItem('q26_participantes', JSON.stringify(obj));
     }
