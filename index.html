@@ -801,9 +801,9 @@ function renderGruposPredicciones(){
             <span class="eq-flag">${getBanderaTarjeton(pa.local.n)||pa.local.f}</span>
           </div>
           <div class="marcador-box" style="flex-shrink:0;">
-            <input class="marcador-input" type="text" inputmode="numeric" maxlength="2" id="m_${g.id}_${pa.id}_l" value="${ml}" placeholder="0" ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;"':''} oninput=\"autoGuardarGrupos()\"/>
+            <input class="marcador-input" type="text" inputmode="numeric" maxlength="2" id="m_${g.id}_${pa.id}_l" value="${ml}" placeholder="0" ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;"':''} />
             <span class="marcador-sep">-</span>
-            <input class="marcador-input" type="text" inputmode="numeric" maxlength="2" id="m_${g.id}_${pa.id}_v" value="${mv}" placeholder="0" ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;"':''} oninput=\"autoGuardarGrupos()\"/>
+            <input class="marcador-input" type="text" inputmode="numeric" maxlength="2" id="m_${g.id}_${pa.id}_v" value="${mv}" placeholder="0" ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;"':''} />
           </div>
           <div style="display:flex;align-items:center;gap:5px;">
             <span class="eq-flag">${getBanderaTarjeton(pa.visita.n)||pa.visita.f}</span>
@@ -858,53 +858,7 @@ function renderFinalPredicciones(){
   const g=document.getElementById('pred-goleador');
   if(g)g.value=f.goleador||'';
 }
-let autoGuardarTimer = null;
-function autoGuardarGrupos(){
-  // Debounce: espera 800ms después del último cambio para guardar
-  clearTimeout(autoGuardarTimer);
-  autoGuardarTimer = setTimeout(()=>{
-    if(!tarjetonActual) return;
-    const pred = getPredicciones(tarjetonActual.codigo);
-    pred.grupos = {};
-    GRUPOS.forEach(g=>{
-      const c1 = document.getElementById(`g_${g.id}_c1`)?.value || '';
-      const c2 = document.getElementById(`g_${g.id}_c2`)?.value || '';
-      const marcadores = {};
-      getPartidosGrupo(g).forEach(pa=>{
-        const vl = document.getElementById(`m_${g.id}_${pa.id}_l`)?.value;
-        const vv = document.getElementById(`m_${g.id}_${pa.id}_v`)?.value;
-        if(vl!==undefined) marcadores[pa.id+'_l'] = vl;
-        if(vv!==undefined) marcadores[pa.id+'_v'] = vv;
-      });
-      pred.grupos[g.id] = {c1, c2, marcadores};
-    });
-
-    // Validar clasificados de grupos que ya empezaron
-    let gruposSinClasificados = [];
-    GRUPOS.forEach(g => {
-      const partidos = getPartidosGrupo(g);
-      const algunoEmpezado = partidos.some(pa => partidoBloqueado(pa.local.n, pa.visita.n));
-      if(algunoEmpezado) {
-        const c1 = pred.grupos[g.id]?.c1 || '';
-        const c2 = pred.grupos[g.id]?.c2 || '';
-        if(!c1 || !c2) gruposSinClasificados.push(g.nombre);
-      }
-    });
-
-    if(gruposSinClasificados.length > 0) {
-      // Mostrar advertencia pero NO bloquear el auto-guardado de marcadores
-      // Solo avisar visualmente
-      const alertEl = document.getElementById('alerta-pred');
-      if(alertEl) {
-        alertEl.innerHTML = `<div class="alerta warn">⚠️ Recuerda seleccionar los clasificados de: <b>${gruposSinClasificados.join(', ')}</b></div>`;
-        setTimeout(()=>{ if(alertEl) alertEl.innerHTML=''; }, 4000);
-      }
-    }
-
-    setPredicciones(tarjetonActual.codigo, pred);
-    actualizarProgreso();
-  }, 800);
-}
+// Auto-guardado eliminado — solo se guarda con el botón
 
 function guardarFase(fase){
   const fechaLimite=new Date('2026-06-10T23:59:59');
