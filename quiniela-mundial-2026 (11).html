@@ -1864,9 +1864,8 @@ function renderCalendario(){
 // Actualización automática cada 5 minutos
 // ===================================
 const FD_API_KEY = '2f9dc7f15fa14392936dd80ba44ccc75';
-const FD_URL = 'https://api.football-data.org/v4/competitions/WC/matches';
-// Proxy CORS para evitar bloqueos del navegador
-const PROXY_URL = 'https://api.allorigins.win/raw?url=';
+// URL de la Netlify Function — sin CORS, funciona siempre
+const FD_URL = '/api/football-api';
 let apiIntervalId = null;
 let ultimaActualizacion = null;
 
@@ -1942,35 +1941,10 @@ function setApiStatus(estado, texto) {
 async function actualizarResultadosAPI() {
   setApiStatus('', 'Actualizando resultados...');
   try {
-    // Intentar múltiples métodos para superar CORS
-    let resp = null;
-    let data = null;
-    
-    // Método 1: directo (funciona en Netlify con HTTPS)
-    try {
-      resp = await fetch(FD_URL, { headers: { 'X-Auth-Token': FD_API_KEY } });
-      if(resp.ok) { data = await resp.json(); }
-    } catch(e) { resp = null; }
-    
-    // Método 2: proxy allorigins
-    if(!data) {
-      try {
-        const u1 = 'https://api.allorigins.win/get?url=' + encodeURIComponent(FD_URL + '?X-Auth-Token=' + FD_API_KEY);
-        const r1 = await fetch(u1);
-        if(r1.ok) { const j = await r1.json(); data = JSON.parse(j.contents); }
-      } catch(e) {}
-    }
-    
-    // Método 3: corsproxy.io
-    if(!data) {
-      try {
-        const u2 = 'https://corsproxy.io/?' + encodeURIComponent(FD_URL);
-        const r2 = await fetch(u2, { headers: { 'X-Auth-Token': FD_API_KEY } });
-        if(r2.ok) { data = await r2.json(); }
-      } catch(e) {}
-    }
-
-    if(!data) throw new Error('No se pudo conectar a la API');
+    // Llamar a la Netlify Function — sin CORS, directo al servidor
+    const resp = await fetch(FD_URL);
+    if(!resp.ok) throw new Error('Error HTTP: ' + resp.status);
+    const data = await resp.json();
     const partidos = data.matches || [];
 
     if(!resp.ok) {
