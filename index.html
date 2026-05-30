@@ -341,6 +341,9 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--fondo); co
       <button class="tab" onclick="switchTab('tarjeton')">🎫 Tarjetón</button>
     </div>
     <div id="tab-grupos" class="tab-content active">
+      <div style="background:#fde8e8;border:1.5px solid var(--rojo);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.82rem;color:#721c24;">
+        🔴 <b>Importante:</b> Elige los clasificados (1° y 2°) de cada grupo <b>antes del primer partido del grupo.</b> Después no podrás editarlos.
+      </div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
         <button onclick="guardarFase('grupos')" style="background:var(--rojo);color:white;border:none;padding:9px 20px;border-radius:20px;font-size:0.85rem;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(200,16,46,0.35);">💾 Guardar predicciones</button>
       </div>
@@ -920,9 +923,15 @@ function guardarFase(fase){
 function actualizarProgreso(){
   if(!tarjetonActual)return;
   const pred=getPredicciones(tarjetonActual.codigo);
-  const total=12*2+16+8+4+4;
+  // Total: 12 grupos x 2 clasificados + 12 grupos x 6 partidos marcadores + octavos + cuartos + semis + final
+  const total = 12*2 + 16+8+4+4;
   let c=0;
+  // Contar clasificados guardados
   if(pred.grupos)c+=Object.values(pred.grupos).filter(g=>g.c1&&g.c2).length*2;
+  // Contar marcadores con al menos un valor
+  if(pred.grupos) Object.values(pred.grupos).forEach(g=>{
+    if(g.marcadores) Object.values(g.marcadores).forEach(v=>{ if(v!=='') c+=0.5; });
+  });
   if(pred.octavos)c+=Object.values(pred.octavos).filter(v=>v&&v!=='').length;
   if(pred.cuartos)c+=Object.values(pred.cuartos).filter(v=>v&&v!=='').length;
   if(pred.semis)c+=Object.values(pred.semis).filter(v=>v&&v!=='').length;
