@@ -912,16 +912,12 @@ function guardarFase(fase){
   const pred=getPredicciones(tarjetonActual.codigo);
 
   if(fase==='grupos'){
-    // Validar que grupos con partidos ya iniciados tengan clasificados
+    // Validar SIEMPRE que todos los grupos tengan clasificados seleccionados
     let gruposSinClasificados = [];
     GRUPOS.forEach(g => {
-      const partidos = getPartidosGrupo(g);
-      const algunoEmpezado = partidos.some(pa => partidoBloqueado(pa.local.n, pa.visita.n));
-      if(algunoEmpezado){
-        const c1 = document.getElementById(`g_${g.id}_c1`)?.value || '';
-        const c2 = document.getElementById(`g_${g.id}_c2`)?.value || '';
-        if(!c1 || !c2) gruposSinClasificados.push(g.nombre);
-      }
+      const c1 = document.getElementById(`g_${g.id}_c1`)?.value || '';
+      const c2 = document.getElementById(`g_${g.id}_c2`)?.value || '';
+      if(!c1 || !c2) gruposSinClasificados.push(g.nombre);
     });
     if(gruposSinClasificados.length > 0){
       mostrarAlerta('alerta-pred',`⚠️ Predicción incompleta — Selecciona los clasificados de: ${gruposSinClasificados.join(', ')}`,'warn');
