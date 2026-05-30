@@ -823,13 +823,13 @@ function renderGruposPredicciones(){
             </div>
             <div>
               <label style="font-size:0.75rem;font-weight:600;color:#888;display:block;margin-bottom:4px">🥇 1° Clasificado</label>
-              <select id="g_${g.id}_c1" style="width:100%;padding:8px;border:2px solid var(--gris);border-radius:8px;font-size:0.82rem;${todosBloqueados?'background:#f0f0f0;color:#999;cursor:not-allowed;':''}" ${todosBloqueados?'disabled':''} onchange="autoGuardarGrupos()">
+              <select id="g_${g.id}_c1" style="width:100%;padding:8px;border:2px solid var(--gris);border-radius:8px;font-size:0.82rem;${todosBloqueados?'background:#f0f0f0;color:#999;cursor:not-allowed;':''}" ${todosBloqueados?'disabled':''} >
                 <option value="">Selecciona...</option>${opts1}
               </select>
             </div>
             <div>
               <label style="font-size:0.75rem;font-weight:600;color:#888;display:block;margin-bottom:4px">🥈 2° Clasificado</label>
-              <select id="g_${g.id}_c2" style="width:100%;padding:8px;border:2px solid var(--gris);border-radius:8px;font-size:0.82rem;${todosBloqueados?'background:#f0f0f0;color:#999;cursor:not-allowed;':''}" ${todosBloqueados?'disabled':''} onchange="autoGuardarGrupos()">
+              <select id="g_${g.id}_c2" style="width:100%;padding:8px;border:2px solid var(--gris);border-radius:8px;font-size:0.82rem;${todosBloqueados?'background:#f0f0f0;color:#999;cursor:not-allowed;':''}" ${todosBloqueados?'disabled':''} >
                 <option value="">Selecciona...</option>${opts2}
               </select>
             </div>
