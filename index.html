@@ -783,31 +783,30 @@ function renderGruposPredicciones(){
   document.getElementById('grupos-container').innerHTML=GRUPOS.map(g=>{
     const pG=(pred.grupos||{})[g.id]||{};
     const partidos=getPartidosGrupo(g);
-    const opts1=g.equipos.map(e=>`<option value="${e.n}" ${pG.c1===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
-    const opts2=g.equipos.map(e=>`<option value="${e.n}" ${pG.c2===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
-    // Clasificados: se bloquean permanentemente una vez guardados por primera vez
-    // Clasificados bloqueados cuando:
-    // 1. El primer partido del grupo ya empezó, O
-    // 2. Ya se guardaron los clasificados (para evitar cambios después de guardar)
+    const c1Val = pG.c1||'';
+    const c2Val = pG.c2||'';
+    
+    // Verificar bloqueo
     const primerPartido = partidos[0];
-    const primerPartidoEmpezado = primerPartido && partidoBloqueado(primerPartido.local.n, primerPartido.visita.n);
-    const yaGuardadosClasificados = pG.c1 && pG.c1 !== '' && pG.c2 && pG.c2 !== '';
-    const todosBloqueados = primerPartidoEmpezado || yaGuardadosClasificados;
+    const primerBloq = primerPartido && partidoBloqueado(primerPartido.local.n, primerPartido.visita.n);
+    const yaGuardados = c1Val !== '' && c2Val !== '';
+    const clasifBloqueados = primerBloq || yaGuardados;
+
     const filas=partidos.map(pa=>{
+      const bloq = partidoBloqueado(pa.local.n, pa.visita.n);
       const ml=(pG.marcadores||{})[pa.id+'_l']||'';
       const mv=(pG.marcadores||{})[pa.id+'_v']||'';
-      const bloq = partidoBloqueado(pa.local.n, pa.visita.n);
       return `<div class="partido-grupo" style="position:relative;">
-        ${bloq ? `<div style="position:absolute;top:4px;right:6px;"><span style="background:#fff3cd;color:#856404;padding:1px 7px;border-radius:8px;font-size:0.65rem;font-weight:700;">🔒 Bloqueado</span></div>` : ''}
+        ${bloq?`<div style="position:absolute;top:4px;right:6px;"><span style="background:#fff3cd;color:#856404;padding:1px 7px;border-radius:8px;font-size:0.65rem;font-weight:700;">🔒 Bloqueado</span></div>`:''}
         <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;width:100%;">
           <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;">
             <span style="font-size:0.83rem;font-weight:600;text-align:right">${pa.local.n}</span>
             <span class="eq-flag">${getBanderaTarjeton(pa.local.n)||pa.local.f}</span>
           </div>
           <div class="marcador-box" style="flex-shrink:0;">
-            <input class="marcador-input" type="text" inputmode="numeric" maxlength="2" id="m_${g.id}_${pa.id}_l" value="${ml}" placeholder="0" ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;"':''} />
+            <input class="marcador-input" type="text" inputmode="numeric" maxlength="2" id="m_${g.id}_${pa.id}_l" value="${ml}" placeholder="0" ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;"':''}/>
             <span class="marcador-sep">-</span>
-            <input class="marcador-input" type="text" inputmode="numeric" maxlength="2" id="m_${g.id}_${pa.id}_v" value="${mv}" placeholder="0" ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;"':''} />
+            <input class="marcador-input" type="text" inputmode="numeric" maxlength="2" id="m_${g.id}_${pa.id}_v" value="${mv}" placeholder="0" ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;"':''}/>
           </div>
           <div style="display:flex;align-items:center;gap:5px;">
             <span class="eq-flag">${getBanderaTarjeton(pa.visita.n)||pa.visita.f}</span>
@@ -816,51 +815,100 @@ function renderGruposPredicciones(){
         </div>
       </div>`;
     }).join('');
-    return `<div class="grupo-bracket">
-      <div class="grupo-bracket-header">⚽ ${g.nombre}<span style="margin-left:auto;font-size:0.75rem;opacity:0.8;font-weight:400">Ingresa el marcador que predices</span></div>
-      <div class="grupo-bracket-body">${filas}
-        <div style="border-top:2px dashed #e0e8ff;margin-top:10px;padding-top:10px;">
-          <div style="font-size:0.8rem;font-weight:700;color:var(--azul);margin-bottom:8px">🏅 ¿Quiénes clasifican?</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div style="grid-column:1/-1;background:#fde8e8;border:1px solid var(--rojo);border-radius:8px;padding:6px 10px;font-size:0.72rem;color:#721c24;margin-bottom:4px;">
-              🔴 <b>Elige los clasificados antes de que empiece el primer partido del grupo.</b> Después no podrás editarlos.
-            </div>
-            <div>
-              <label style="font-size:0.75rem;font-weight:600;color:#888;display:block;margin-bottom:4px">🥇 1° Clasificado</label>
-              <select id="g_${g.id}_c1" style="width:100%;padding:8px;border:2px solid var(--gris);border-radius:8px;font-size:0.82rem;${todosBloqueados?'background:#f0f0f0;color:#999;cursor:not-allowed;':''}" ${todosBloqueados?'disabled':''} >
-                <option value="">Selecciona...</option>${opts1}
-              </select>
-            </div>
-            <div>
-              <label style="font-size:0.75rem;font-weight:600;color:#888;display:block;margin-bottom:4px">🥈 2° Clasificado</label>
-              <select id="g_${g.id}_c2" style="width:100%;padding:8px;border:2px solid var(--gris);border-radius:8px;font-size:0.82rem;${todosBloqueados?'background:#f0f0f0;color:#999;cursor:not-allowed;':''}" ${todosBloqueados?'disabled':''} >
-                <option value="">Selecciona...</option>${opts2}
-              </select>
-            </div>
+
+    const opts = g.equipos.map(e=>`<option value="${e.n}" ${c1Val===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
+    const opts2 = g.equipos.map(e=>`<option value="${e.n}" ${c2Val===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
+
+    return `<div class="partido-card">
+      <div style="background:var(--azul);color:white;padding:8px 14px;border-radius:10px;font-weight:700;font-size:0.88rem;margin-bottom:10px;">
+        ⚽ ${g.nombre}
+      </div>
+      ${filas}
+      <div style="margin-top:12px;background:#f8f9ff;border-radius:10px;padding:10px 12px;border:1px solid #e0e8ff;">
+        <div style="font-size:0.78rem;font-weight:700;color:var(--azul);margin-bottom:8px;">
+          🏅 ¿Quiénes clasifican de este grupo?
+          ${clasifBloqueados?'<span style="background:#28a745;color:white;padding:1px 8px;border-radius:8px;font-size:0.65rem;margin-left:6px;">✅ Guardado</span>':'<span style="background:var(--rojo);color:white;padding:1px 8px;border-radius:8px;font-size:0.65rem;margin-left:6px;">⚠️ Obligatorio</span>'}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <label style="font-size:0.72rem;color:#888;display:block;margin-bottom:3px;">🥇 1° Clasificado</label>
+            <select id="g_${g.id}_c1" style="width:100%;padding:8px;border:2px solid ${clasifBloqueados?'#28a745':'var(--rojo)'};border-radius:8px;font-size:0.82rem;${clasifBloqueados?'background:#f0fff4;color:#155724;cursor:not-allowed;':''}" ${clasifBloqueados?'disabled':''}>
+              <option value="">-- Selecciona --</option>${opts}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.72rem;color:#888;display:block;margin-bottom:3px;">🥈 2° Clasificado</label>
+            <select id="g_${g.id}_c2" style="width:100%;padding:8px;border:2px solid ${clasifBloqueados?'#28a745':'var(--rojo)'};border-radius:8px;font-size:0.82rem;${clasifBloqueados?'background:#f0fff4;color:#155724;cursor:not-allowed;':''}" ${clasifBloqueados?'disabled':''}>
+              <option value="">-- Selecciona --</option>${opts2}
+            </select>
           </div>
         </div>
       </div>
     </div>`;
   }).join('');
 }
-function renderPartidosPredicciones(fase,partidos,containerId){
-  const pred=getPredicciones(tarjetonActual.codigo);
-  const fasePred=(pred[fase]||{});
-  document.getElementById(containerId).innerHTML=partidos.map(p=>{
-    const opts=TODOS_EQUIPOS.map(e=>`<option value="${e.n}" ${fasePred[p.id]===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
-    return `<div class="partido-card"><div class="partido-titulo">${p.lbl}</div><div class="partido-opciones"><select id="p_${fase}_${p.id}"><option value="">Selecciona ganador...</option>${opts}</select></div></div>`;
+function renderPartidosPredicciones(fase, partidos, containerId){
+  const pred = getPredicciones(tarjetonActual.codigo);
+  const predFase = pred[fase] || {};
+  
+  // Todos los equipos del mundial para los selectores
+  const equipos = GRUPOS.flatMap(g => g.equipos);
+  
+  document.getElementById(containerId).innerHTML = partidos.map((p,idx) => {
+    const v = predFase[p.id] || '';
+    const opts = equipos.map(e => 
+      `<option value="${e.n}" ${v===e.n?'selected':''}>${e.f} ${e.n}</option>`
+    ).join('');
+    
+    return `<div style="background:white;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.06);border-left:3px solid var(--azul);">
+      <div style="font-size:0.75rem;color:#888;margin-bottom:8px;">
+        Partido ${idx+1} — ${p.lbl}
+      </div>
+      <div style="font-size:0.82rem;font-weight:700;color:var(--azul);margin-bottom:6px;">
+        🏆 ¿Quién gana este partido?
+      </div>
+      <select id="o_${p.id}" style="width:100%;padding:10px;border:2px solid var(--gris);border-radius:8px;font-size:0.85rem;background:white;">
+        <option value="">-- Selecciona el ganador --</option>
+        ${opts}
+      </select>
+      ${v ? `<div style="margin-top:6px;font-size:0.75rem;color:#28a745;font-weight:600;">✅ Seleccionado: ${equipos.find(e=>e.n===v)?.f||''} ${v}</div>` : ''}
+    </div>`;
   }).join('');
 }
 function renderFinalPredicciones(){
-  const pred=getPredicciones(tarjetonActual.codigo);
-  const f=pred.final||{};
-  const opts=TODOS_EQUIPOS.map(e=>`<option value="${e.n}">${e.f} ${e.n}</option>`).join('');
-  ['campeon','subcampeon','tercero'].forEach(campo=>{
-    const sel=document.getElementById('pred-'+campo);
-    if(sel){sel.innerHTML=`<option value="">Selecciona...</option>${opts}`;sel.value=f[campo]||'';}
-  });
-  const g=document.getElementById('pred-goleador');
-  if(g)g.value=f.goleador||'';
+  const pred = getPredicciones(tarjetonActual.codigo);
+  const pf = pred.final || {};
+  const equipos = GRUPOS.flatMap(g => g.equipos);
+  
+  const mkSelect = (id, label, val, emoji) => {
+    const opts = equipos.map(e => 
+      `<option value="${e.n}" ${val===e.n?'selected':''}>${e.f} ${e.n}</option>`
+    ).join('');
+    return `<div style="background:white;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+      <div style="font-size:0.88rem;font-weight:700;color:var(--azul);margin-bottom:8px;">${emoji} ${label}</div>
+      <select id="${id}" style="width:100%;padding:10px;border:2px solid var(--gris);border-radius:8px;font-size:0.85rem;">
+        <option value="">-- Selecciona --</option>${opts}
+      </select>
+      ${val?`<div style="margin-top:6px;font-size:0.75rem;color:#28a745;font-weight:600;">✅ ${equipos.find(e=>e.n===val)?.f||''} ${val}</div>`:''}
+    </div>`;
+  };
+  
+  document.getElementById('final-container').innerHTML = `
+    <div style="background:#fffbea;border:2px solid var(--dorado);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:0.82rem;color:#856404;font-weight:600;">
+        🏆 Las predicciones de la Final valen más puntos. ¡Elige bien!
+      </div>
+    </div>
+    ${mkSelect('f_campeon','¿Quién será el Campeón del Mundial?',pf.campeon||'','🥇')}
+    ${mkSelect('f_subcampeon','¿Quién llegará a la Final pero no ganará?',pf.subcampeon||'','🥈')}
+    ${mkSelect('f_tercero','¿Quién quedará en 3er lugar?',pf.tercero||'','🥉')}
+    <div style="background:white;border-radius:12px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+      <div style="font-size:0.88rem;font-weight:700;color:var(--azul);margin-bottom:8px;">⚽ ¿Quién será el máximo goleador? (+20 pts)</div>
+      <input id="f_goleador" type="text" placeholder="Escribe el nombre del jugador..." value="${pf.goleador||''}" 
+        style="width:100%;padding:10px;border:2px solid var(--gris);border-radius:8px;font-size:0.85rem;box-sizing:border-box;"/>
+      ${pf.goleador?`<div style="margin-top:6px;font-size:0.75rem;color:#28a745;font-weight:600;">✅ ${pf.goleador}</div>`:''}
+    </div>
+  `;
 }
 // Auto-guardado eliminado — solo se guarda con el botón
 
