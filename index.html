@@ -786,9 +786,13 @@ function renderGruposPredicciones(){
     const opts1=g.equipos.map(e=>`<option value="${e.n}" ${pG.c1===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
     const opts2=g.equipos.map(e=>`<option value="${e.n}" ${pG.c2===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
     // Clasificados: se bloquean permanentemente una vez guardados por primera vez
-    // Clasificados bloqueados cuando el primer partido del grupo ya empezó
+    // Clasificados bloqueados cuando:
+    // 1. El primer partido del grupo ya empezó, O
+    // 2. Ya se guardaron los clasificados (para evitar cambios después de guardar)
     const primerPartido = partidos[0];
-    const todosBloqueados = primerPartido && partidoBloqueado(primerPartido.local.n, primerPartido.visita.n);
+    const primerPartidoEmpezado = primerPartido && partidoBloqueado(primerPartido.local.n, primerPartido.visita.n);
+    const yaGuardadosClasificados = pG.c1 && pG.c1 !== '' && pG.c2 && pG.c2 !== '';
+    const todosBloqueados = primerPartidoEmpezado || yaGuardadosClasificados;
     const filas=partidos.map(pa=>{
       const ml=(pG.marcadores||{})[pa.id+'_l']||'';
       const mv=(pG.marcadores||{})[pa.id+'_v']||'';
