@@ -761,7 +761,10 @@ function renderGruposPredicciones(){
     const partidos=getPartidosGrupo(g);
     const opts1=g.equipos.map(e=>`<option value="${e.n}" ${pG.c1===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
     const opts2=g.equipos.map(e=>`<option value="${e.n}" ${pG.c2===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
-    const todosBloqueados = partidos.every(pa => partidoBloqueado(pa.local.n, pa.visita.n));
+    // Clasificados: se bloquean permanentemente una vez guardados por primera vez
+    const c1Guardado = pG.c1 && pG.c1 !== '';
+    const c2Guardado = pG.c2 && pG.c2 !== '';
+    const todosBloqueados = c1Guardado && c2Guardado;
     const filas=partidos.map(pa=>{
       const ml=(pG.marcadores||{})[pa.id+'_l']||'';
       const mv=(pG.marcadores||{})[pa.id+'_v']||'';
@@ -791,6 +794,9 @@ function renderGruposPredicciones(){
         <div style="border-top:2px dashed #e0e8ff;margin-top:10px;padding-top:10px;">
           <div style="font-size:0.8rem;font-weight:700;color:var(--azul);margin-bottom:8px">🏅 ¿Quiénes clasifican?</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="grid-column:1/-1;background:#fff8e1;border:1px solid #FFD700;border-radius:8px;padding:6px 10px;font-size:0.72rem;color:#856404;margin-bottom:4px;">
+              🔒 <b>Elige bien los clasificados.</b> Una vez que guardes tus predicciones, los clasificados quedan bloqueados para siempre y no podrás cambiarlos.
+            </div>
             <div>
               <label style="font-size:0.75rem;font-weight:600;color:#888;display:block;margin-bottom:4px">🥇 1° Clasificado</label>
               <select id="g_${g.id}_c1" style="width:100%;padding:8px;border:2px solid var(--gris);border-radius:8px;font-size:0.82rem;${todosBloqueados?'background:#f0f0f0;color:#999;cursor:not-allowed;':''}" ${todosBloqueados?'disabled':''} onchange="autoGuardarGrupos()">
@@ -858,6 +864,37 @@ function guardarFase(fase){
   if(new Date()>fechaLimite){mostrarAlerta('alerta-pred','🔒 El plazo venció el 10 de junio de 2026.','warn');return;}
   const pred=getPredicciones(tarjetonActual.codigo);
   if(fase==='grupos'){
+    // Validar primer partido (México vs Sudáfrica = Grupo A, índices 0 y 1 → id A_01)
+    // y clasificados del Grupo A
+    const marcadorMexLocal = document.getElementById('m_A_A_01_l')?.value ||
+                             document.getElementById('m_A_01_l')?.value || '';
+    const marcadorMexVisita = document.getElementById('m_A_A_01_v')?.value ||
+                              document.getElementById('m_A_01_v')?.value || '';
+    // Buscar el input del primer partido directamente
+    const grupoA = GRUPOS.find(g => g.id === 'A');
+    const partA = getPartidosGrupo(grupoA)[0]; // México vs Sudáfrica
+    const inputLocal = document.getElementById(`m_A_${partA.id}_l`);
+    const inputVisita = document.getElementById(`m_A_${partA.id}_v`);
+    const valLocal = inputLocal?.value || '';
+    const valVisita = inputVisita?.value || '';
+
+    // Leer clasificados del DOM o de predicciones guardadas (por si están disabled)
+    const predActual = getPredicciones(tarjetonActual.codigo);
+    const c1DOM = document.getElementById('g_A_c1')?.value || '';
+    const c2DOM = document.getElementById('g_A_c2')?.value || '';
+    const c1Guardado = predActual?.grupos?.A?.c1 || '';
+    const c2Guardado = predActual?.grupos?.A?.c2 || '';
+    const clasificado1A = c1DOM || c1Guardado;
+    const clasificado2A = c2DOM || c2Guardado;
+
+    if(!valLocal || !valVisita) {
+      mostrarAlerta('alerta-pred', '⚽ Para guardar debes predecir el primer partido: México vs Sudáfrica', 'warn');
+      return;
+    }
+    if(!clasificado1A || !clasificado2A) {
+      mostrarAlerta('alerta-pred', '🏅 Para guardar debes elegir el 1° y 2° clasificado del Grupo A', 'warn');
+      return;
+    }
     pred.grupos={};
     GRUPOS.forEach(g=>{
       const marcadores={};
