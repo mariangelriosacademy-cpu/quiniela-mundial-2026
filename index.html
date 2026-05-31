@@ -327,7 +327,7 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--fondo); co
       <div style="font-weight:700;font-size:1rem" id="pred-nombre-display"></div>
       <div style="font-size:0.82rem;color:#888" id="pred-codigo-display"></div>
       <div style="margin-top:10px">
-        <div class="progreso-bar"><div class="progreso-fill" id="progreso-fill" style="width:0%"></div></div>
+        <div class="progreso-bar"><div class="progreso-fill" id="progreso-fill" style="width:0%;transition:width 0.4s;"></div></div>
         <div class="progreso-texto" id="progreso-texto">0% completado</div>
       </div>
     </div>
@@ -797,14 +797,16 @@ function abrirPredicciones(cedula,codigo){
   irA('predicciones');
   switchTab('grupos');
   setTimeout(()=>{
+    actualizarProgreso(); // Primero actualizar barra con datos guardados
     renderGruposPredicciones();
     renderPartidosPredicciones('dieciseisavos',PARTIDOS_DIECISEISAVOS,'dieciseisavos-container');
     renderPartidosPredicciones('octavos',PARTIDOS_OCTAVOS,'octavos-container');
     renderPartidosPredicciones('cuartos',PARTIDOS_CUARTOS,'cuartos-container');
     renderPartidosPredicciones('semis',PARTIDOS_SEMIS,'semis-container');
     renderFinalPredicciones();
+    cargarValoresFinal();
     cargarTarjetonView();
-    actualizarProgreso();
+    actualizarProgreso(); // Actualizar de nuevo al final
   }, 50);
   } catch(e){ console.error('Error abrirPredicciones:',e); alert('Error al abrir predicciones: '+e.message); }
 }
@@ -989,6 +991,20 @@ function renderPartidosPredicciones(fase, partidos, containerId){
 
   document.getElementById(containerId).innerHTML = html;
 }
+function cargarValoresFinal(){
+  if(!tarjetonActual) return;
+  const pred = getPredicciones(tarjetonActual.codigo);
+  const pf = pred.final || {};
+  const selC = document.getElementById('pred-campeon');
+  const selS = document.getElementById('pred-subcampeon');
+  const selT = document.getElementById('pred-tercero');
+  const inpG = document.getElementById('pred-goleador');
+  if(selC && pf.campeon) selC.value = pf.campeon;
+  if(selS && pf.subcampeon) selS.value = pf.subcampeon;
+  if(selT && pf.tercero) selT.value = pf.tercero;
+  if(inpG && pf.goleador) inpG.value = pf.goleador;
+}
+
 function renderFinalPredicciones(){
   const pred = getPredicciones(tarjetonActual.codigo);
   const pf = pred.final || {};
@@ -1117,10 +1133,11 @@ function guardarFase(fase){
 
   }else if(fase==='final'){
     pred.final=pred.final||{};
-    pred.final.campeon=document.getElementById('f_campeon')?.value||'';
-    pred.final.subcampeon=document.getElementById('f_subcampeon')?.value||'';
-    pred.final.tercero=document.getElementById('f_tercero')?.value||'';
-    pred.final.goleador=document.getElementById('f_goleador')?.value||'';
+    // Los IDs en el HTML del tab-final son pred-campeon, pred-subcampeon, etc.
+    pred.final.campeon=document.getElementById('pred-campeon')?.value||'';
+    pred.final.subcampeon=document.getElementById('pred-subcampeon')?.value||'';
+    pred.final.tercero=document.getElementById('pred-tercero')?.value||'';
+    pred.final.goleador=document.getElementById('pred-goleador')?.value||'';
     setPredicciones(tarjetonActual.codigo,pred);
     mostrarToast('✅ Final y bonus guardados');
     actualizarProgreso();
@@ -1195,6 +1212,7 @@ function switchTab(tab){
   // Re-renderizar según el tab activo
   if(tab==='tarjeton') cargarTarjetonView();
   if(tab==='grupos') renderGruposPredicciones();
+  if(tab==='final') cargarValoresFinal();
   if(tab==='dieciseisavos') renderPartidosPredicciones('dieciseisavos',PARTIDOS_DIECISEISAVOS,'dieciseisavos-container');
   if(tab==='octavos') renderPartidosPredicciones('octavos',PARTIDOS_OCTAVOS,'octavos-container');
   if(tab==='cuartos') renderPartidosPredicciones('cuartos',PARTIDOS_CUARTOS,'cuartos-container');
