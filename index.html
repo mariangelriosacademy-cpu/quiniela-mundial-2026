@@ -1323,7 +1323,7 @@ function cargarTarjetonView(){
     </div>`;
   });
   html+='</div>';
-  [['octavos','🏟️ OCTAVOS',PARTIDOS_OCTAVOS],['cuartos','⚔️ CUARTOS',PARTIDOS_CUARTOS],['semis','🔥 SEMIFINALES',PARTIDOS_SEMIS]].forEach(([fase,titulo,partidos])=>{
+  [['dieciseisavos','🏟️ DIECISEISAVOS',PARTIDOS_DIECISEISAVOS],['octavos','⚔️ OCTAVOS',PARTIDOS_OCTAVOS],['cuartos','💥 CUARTOS',PARTIDOS_CUARTOS],['semis','🔥 SEMIFINALES',PARTIDOS_SEMIS]].forEach(([fase,titulo,partidos])=>{
     html+=`<div style="background:${fase==='octavos'?'var(--rojo)':fase==='cuartos'?'var(--azul)':'#1a5276'};color:white;padding:8px 14px;border-radius:8px;font-weight:700;font-size:0.9rem;margin:10px 0 8px">${titulo}</div>`;
     html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px;margin-bottom:4px;">`;
     partidos.forEach(pa=>{
