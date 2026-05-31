@@ -346,14 +346,14 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--fondo); co
       <div style="background:#fde8e8;border:1.5px solid var(--rojo);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.82rem;color:#721c24;">
         🔴 <b>Importante:</b> Debes elegir el 1° y 2° clasificado de cada grupo. Sin eso no puedes guardar.
       </div>
-      <!-- Navegación paginada -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <button id="btn-grupo-prev" onclick="cambiarGrupo(-1)" style="background:var(--azul);color:white;border:none;padding:8px 16px;border-radius:20px;font-size:0.85rem;font-weight:700;cursor:pointer;opacity:0.4;" disabled>← Anterior</button>
-        <div style="text-align:center;">
-          <div id="grupo-indicador" style="font-size:0.9rem;font-weight:700;color:var(--azul);">Grupo A</div>
-          <div id="grupo-progreso-ind" style="font-size:0.72rem;color:#888;">1 de 12</div>
+      <!-- Navegación por jornadas -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;">
+        <button id="btn-grupo-prev" onclick="cambiarJornada(-1)" style="background:var(--azul);color:white;border:none;padding:8px 14px;border-radius:20px;font-size:0.85rem;font-weight:700;cursor:pointer;opacity:0.4;flex-shrink:0;" disabled>← Anterior</button>
+        <div style="text-align:center;flex:1;">
+          <div id="grupo-indicador" style="font-size:0.88rem;font-weight:700;color:var(--azul);">Jueves 11 de Junio</div>
+          <div id="grupo-progreso-ind" style="font-size:0.7rem;color:#888;">Jornada 1 de 17</div>
         </div>
-        <button id="btn-grupo-next" onclick="cambiarGrupo(1)" style="background:var(--azul);color:white;border:none;padding:8px 16px;border-radius:20px;font-size:0.85rem;font-weight:700;cursor:pointer;">Siguiente →</button>
+        <button id="btn-grupo-next" onclick="cambiarJornada(1)" style="background:var(--azul);color:white;border:none;padding:8px 14px;border-radius:20px;font-size:0.85rem;font-weight:700;cursor:pointer;flex-shrink:0;">Siguiente →</button>
       </div>
       <!-- Contenedor del grupo actual -->
       <div id="grupos-container"></div>
@@ -780,7 +780,7 @@ function abrirPredicciones(cedula,codigo){
     if(!p){alert('No se encontró el participante. Intenta de nuevo.');return;}
     document.getElementById('pred-nombre-display').textContent=p.nombre;
     document.getElementById('pred-codigo-display').textContent='Tarjetón: '+codigo;
-    grupoActualIdx = 0;
+    jornadaActualIdx = 0;
   // Primero navegar a la página, luego renderizar
   irA('predicciones');
   switchTab('grupos');
@@ -796,121 +796,157 @@ function abrirPredicciones(cedula,codigo){
   }, 50);
   } catch(e){ console.error('Error abrirPredicciones:',e); alert('Error al abrir predicciones: '+e.message); }
 }
-// Índice del grupo actual en la paginación
-let grupoActualIdx = 0;
+// ===== JORNADAS CRONOLÓGICAS =====
+let jornadaActualIdx = 0;
 
-function cambiarGrupo(dir){
-  grupoActualIdx = Math.max(0, Math.min(GRUPOS.length-1, grupoActualIdx + dir));
+const JORNADAS_CAL = [
+  {titulo:'Jueves 11 de Junio',partidos:[{l:'México',v:'Sudáfrica',g:'A',h:'15:00'},{l:'República de Corea',v:'Chequia',g:'A',h:'22:00'}]},
+  {titulo:'Viernes 12 de Junio',partidos:[{l:'Canadá',v:'Bosnia y Herzegovina',g:'B',h:'15:00'},{l:'EE. UU.',v:'Paraguay',g:'D',h:'21:00'}]},
+  {titulo:'Sábado 13 de Junio',partidos:[{l:'Catar',v:'Suiza',g:'B',h:'15:00'},{l:'Brasil',v:'Marruecos',g:'C',h:'18:00'},{l:'Haití',v:'Escocia',g:'C',h:'21:00'},{l:'Australia',v:'Turquía',g:'D',h:'00:00'}]},
+  {titulo:'Domingo 14 de Junio',partidos:[{l:'Alemania',v:'Curazao',g:'E',h:'13:00'},{l:'Países Bajos',v:'Japón',g:'F',h:'16:00'},{l:'Costa de Marfil',v:'Ecuador',g:'E',h:'19:00'},{l:'Suecia',v:'Túnez',g:'F',h:'22:00'}]},
+  {titulo:'Lunes 15 de Junio',partidos:[{l:'España',v:'Islas de Cabo Verde',g:'H',h:'12:00'},{l:'Bélgica',v:'Egipto',g:'G',h:'15:00'},{l:'Arabia Saudí',v:'Uruguay',g:'H',h:'18:00'},{l:'RI de Irán',v:'Nueva Zelanda',g:'G',h:'21:00'}]},
+  {titulo:'Martes 16 de Junio',partidos:[{l:'Francia',v:'Senegal',g:'I',h:'15:00'},{l:'Irak',v:'Noruega',g:'I',h:'18:00'},{l:'Argentina',v:'Argelia',g:'J',h:'21:00'},{l:'Austria',v:'Jordania',g:'J',h:'00:00'}]},
+  {titulo:'Miércoles 17 de Junio',partidos:[{l:'Portugal',v:'RD Congo',g:'K',h:'13:00'},{l:'Inglaterra',v:'Croacia',g:'L',h:'16:00'},{l:'Ghana',v:'Panamá',g:'L',h:'19:00'},{l:'Uzbekistán',v:'Colombia',g:'K',h:'22:00'}]},
+  {titulo:'Jueves 18 de Junio',partidos:[{l:'Chequia',v:'Sudáfrica',g:'A',h:'12:00'},{l:'Suiza',v:'Bosnia y Herzegovina',g:'B',h:'15:00'},{l:'Canadá',v:'Catar',g:'B',h:'18:00'},{l:'México',v:'República de Corea',g:'A',h:'21:00'}]},
+  {titulo:'Viernes 19 de Junio',partidos:[{l:'EE. UU.',v:'Australia',g:'D',h:'15:00'},{l:'Escocia',v:'Marruecos',g:'C',h:'18:00'},{l:'Brasil',v:'Haití',g:'C',h:'21:00'},{l:'Turquía',v:'Paraguay',g:'D',h:'00:00'}]},
+  {titulo:'Sábado 20 de Junio',partidos:[{l:'Países Bajos',v:'Suecia',g:'F',h:'13:00'},{l:'Alemania',v:'Costa de Marfil',g:'E',h:'16:00'},{l:'Ecuador',v:'Curazao',g:'E',h:'22:00'},{l:'Túnez',v:'Japón',g:'F',h:'00:00'}]},
+  {titulo:'Domingo 21 de Junio',partidos:[{l:'España',v:'Arabia Saudí',g:'H',h:'12:00'},{l:'Bélgica',v:'RI de Irán',g:'G',h:'15:00'},{l:'Uruguay',v:'Islas de Cabo Verde',g:'H',h:'18:00'},{l:'Nueva Zelanda',v:'Egipto',g:'G',h:'21:00'}]},
+  {titulo:'Lunes 22 de Junio',partidos:[{l:'Argentina',v:'Austria',g:'J',h:'13:00'},{l:'Francia',v:'Irak',g:'I',h:'17:00'},{l:'Noruega',v:'Senegal',g:'I',h:'20:00'},{l:'Jordania',v:'Argelia',g:'J',h:'23:00'}]},
+  {titulo:'Martes 23 de Junio',partidos:[{l:'Portugal',v:'Uzbekistán',g:'K',h:'13:00'},{l:'Inglaterra',v:'Ghana',g:'L',h:'16:00'},{l:'Panamá',v:'Croacia',g:'L',h:'19:00'},{l:'Colombia',v:'RD Congo',g:'K',h:'22:00'}]},
+  {titulo:'Miércoles 24 de Junio',partidos:[{l:'Suiza',v:'Canadá',g:'B',h:'15:00'},{l:'Bosnia y Herzegovina',v:'Catar',g:'B',h:'15:00'},{l:'Escocia',v:'Brasil',g:'C',h:'18:00'},{l:'Marruecos',v:'Haití',g:'C',h:'18:00'},{l:'Chequia',v:'México',g:'A',h:'21:00'},{l:'Sudáfrica',v:'República de Corea',g:'A',h:'21:00'}]},
+  {titulo:'Jueves 25 de Junio',partidos:[{l:'Curazao',v:'Costa de Marfil',g:'E',h:'16:00'},{l:'Ecuador',v:'Alemania',g:'E',h:'16:00'},{l:'Japón',v:'Suecia',g:'F',h:'19:00'},{l:'Túnez',v:'Países Bajos',g:'F',h:'19:00'},{l:'Turquía',v:'EE. UU.',g:'D',h:'22:00'},{l:'Paraguay',v:'Australia',g:'D',h:'22:00'}]},
+  {titulo:'Viernes 26 de Junio',partidos:[{l:'Noruega',v:'Francia',g:'I',h:'15:00'},{l:'Senegal',v:'Irak',g:'I',h:'15:00'},{l:'Islas de Cabo Verde',v:'Arabia Saudí',g:'H',h:'20:00'},{l:'Uruguay',v:'España',g:'H',h:'20:00'},{l:'Egipto',v:'RI de Irán',g:'G',h:'23:00'},{l:'Nueva Zelanda',v:'Bélgica',g:'G',h:'23:00'}]},
+  {titulo:'Sábado 27 de Junio',partidos:[{l:'Panamá',v:'Inglaterra',g:'L',h:'17:00'},{l:'Croacia',v:'Ghana',g:'L',h:'17:00'},{l:'Colombia',v:'Portugal',g:'K',h:'19:30'},{l:'RD Congo',v:'Uzbekistán',g:'K',h:'19:30'},{l:'Argelia',v:'Austria',g:'J',h:'22:00'},{l:'Jordania',v:'Argentina',g:'J',h:'22:00'}]},
+];
+
+function cambiarJornada(dir){
+  jornadaActualIdx = Math.max(0, Math.min(JORNADAS_CAL.length-1, jornadaActualIdx + dir));
   renderGruposPredicciones();
 }
 
 function renderGruposPredicciones(){
   try {
   const pred = getPredicciones(tarjetonActual.codigo);
-  const g = GRUPOS[grupoActualIdx];
-  const pG = (pred.grupos||{})[g.id] || {};
-  const partidos = getPartidosGrupo(g);
+  const jornada = JORNADAS_CAL[jornadaActualIdx];
 
   // Actualizar navegación
   const indEl = document.getElementById('grupo-indicador');
   const progEl = document.getElementById('grupo-progreso-ind');
   const prevBtn = document.getElementById('btn-grupo-prev');
   const nextBtn = document.getElementById('btn-grupo-next');
-  if(indEl) indEl.textContent = g.nombre;
+  if(indEl) indEl.textContent = '📅 ' + jornada.titulo;
   if(progEl){
-    // Contar cuántos grupos tienen clasificados guardados
-    let guardados = 0;
-    GRUPOS.forEach(gr => {
-      const pg = (pred.grupos||{})[gr.id]||{};
-      if(pg.c1 && pg.c2) guardados++;
+    const total = JORNADAS_CAL.length;
+    let completadas = 0;
+    JORNADAS_CAL.forEach(j => {
+      const todosGuardados = j.partidos.every(p => {
+        const g = GRUPOS.find(gr => gr.equipos.some(e=>e.n===p.l));
+        if(!g) return false;
+        const pG = (pred.grupos||{})[g.id]||{};
+        return pG.c1 && pG.c2;
+      });
+      if(todosGuardados) completadas++;
     });
-    progEl.textContent = `${grupoActualIdx+1} de 12 — ${guardados}/12 grupos completos`;
+    progEl.textContent = `Jornada ${jornadaActualIdx+1} de ${total} — ${completadas}/${total} jornadas guardadas`;
   }
-  if(prevBtn){ prevBtn.disabled = grupoActualIdx===0; prevBtn.style.opacity = grupoActualIdx===0?'0.4':'1'; }
-  if(nextBtn){ nextBtn.disabled = grupoActualIdx===GRUPOS.length-1; nextBtn.style.opacity = grupoActualIdx===GRUPOS.length-1?'0.4':'1'; }
+  if(prevBtn){ prevBtn.disabled = jornadaActualIdx===0; prevBtn.style.opacity = jornadaActualIdx===0?'0.4':'1'; }
+  if(nextBtn){ nextBtn.disabled = jornadaActualIdx===JORNADAS_CAL.length-1; nextBtn.style.opacity = jornadaActualIdx===JORNADAS_CAL.length-1?'0.4':'1'; }
 
-  // Bloqueo de clasificados
-  const primerPartido = partidos[0];
-  const primerBloq = primerPartido && partidoBloqueado(primerPartido.local.n, primerPartido.visita.n);
-  const yaGuardados = pG.c1 && pG.c1!=='' && pG.c2 && pG.c2!=='';
-  const clasifBloqueados = primerBloq || yaGuardados;
+  // Grupos únicos en esta jornada (para mostrar clasificados al final)
+  const gruposEnJornada = [...new Set(jornada.partidos.map(p=>p.g))];
 
-  // Ordenar partidos por hora
-  const partidosOrdenados = [...partidos].sort((a,b)=>{
-    const pa = PARTIDOS_CAL.find(p=>p.local===a.local.n&&p.visita===a.visita.n);
-    const pb = PARTIDOS_CAL.find(p=>p.local===b.local.n&&p.visita===b.visita.n);
-    if(!pa||!pb) return 0;
-    const fa = pa.fecha+pa.hora;
-    const fb = pb.fecha+pb.hora;
-    return fa.localeCompare(fb);
-  });
+  // Generar tarjetas de partido
+  const tarjetas = jornada.partidos.map(p => {
+    // Buscar el grupo al que pertenece este partido
+    const g = GRUPOS.find(gr => gr.equipos.some(e=>e.n===p.l));
+    if(!g) return '';
+    const pG = (pred.grupos||{})[g.id]||{};
+    
+    // Buscar equipos con emojis
+    const eqL = g.equipos.find(e=>e.n===p.l) || {n:p.l, f:'⚽'};
+    const eqV = g.equipos.find(e=>e.n===p.v) || {n:p.v, f:'⚽'};
 
-  // Generar filas de partidos
-  const filas = partidosOrdenados.map(pa=>{
-    const bloq = partidoBloqueado(pa.local.n, pa.visita.n);
+    // ID del partido basado en GRUPOS
+    const partidos = getPartidosGrupo(g);
+    const pa = partidos.find(pt => pt.local.n===p.l && pt.visita.n===p.v);
+    if(!pa) return '';
+
+    const bloq = partidoBloqueado(p.l, p.v);
     const ml = (pG.marcadores||{})[pa.id+'_l']||'';
     const mv = (pG.marcadores||{})[pa.id+'_v']||'';
-    const partidoCal = PARTIDOS_CAL.find(p=>p.local===pa.local.n&&p.visita===pa.visita.n);
-    const horario = partidoCal ? `${partidoCal.fecha} ${partidoCal.hora}` : '';
 
-    return `<div style="background:white;border-radius:12px;padding:12px 14px;margin-bottom:10px;border:1px solid #e8edf5;">
-      <div style="font-size:0.7rem;color:#999;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-        <span>📅 ${horario}</span>
-        ${bloq?'<span style="background:#fff3cd;color:#856404;padding:2px 8px;border-radius:8px;font-size:0.65rem;font-weight:700;">🔒 Bloqueado</span>':'<span style="background:#e8f4fd;color:#0C447C;padding:2px 8px;border-radius:8px;font-size:0.65rem;font-weight:700;">✏️ Editable</span>'}
+    return `<div style="background:white;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border:1px solid #e8edf5;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="background:var(--azul);color:white;padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;">
+          Grupo ${g.id} — ${p.h}
+        </div>
+        ${bloq
+          ? '<span style="background:#fff3cd;color:#856404;padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;">🔒 Bloqueado</span>'
+          : '<span style="background:#e8f4fd;color:#0C447C;padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;">✏️ Editable</span>'
+        }
       </div>
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;">
-        <div style="text-align:right;">
-          <div style="font-size:1.8rem;line-height:1;">${getBanderaTarjeton(pa.local.n)||pa.local.f}</div>
-          <div style="font-size:0.82rem;font-weight:700;margin-top:4px;">${pa.local.n}</div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;">
+        <div style="text-align:center;">
+          <div style="font-size:2.2rem;line-height:1;">${eqL.f}</div>
+          <div style="font-size:0.82rem;font-weight:700;margin-top:6px;color:var(--azul);">${eqL.n}</div>
         </div>
         <div style="text-align:center;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <input class="marcador-input" type="number" min="0" max="20" id="m_${g.id}_${pa.id}_l" value="${ml}" placeholder="0"
-              style="width:48px;height:48px;text-align:center;font-size:1.4rem;font-weight:700;border-radius:10px;border:2px solid ${ml!==''?'var(--azul)':'var(--gris)'};"
-              ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;width:48px;height:48px;text-align:center;font-size:1.4rem;font-weight:700;border-radius:10px;"':''}/>
-            <span style="font-size:1.5rem;font-weight:700;color:#999;">-</span>
-            <input class="marcador-input" type="number" min="0" max="20" id="m_${g.id}_${pa.id}_v" value="${mv}" placeholder="0"
-              style="width:48px;height:48px;text-align:center;font-size:1.4rem;font-weight:700;border-radius:10px;border:2px solid ${mv!==''?'var(--azul)':'var(--gris)'};"
-              ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;width:48px;height:48px;text-align:center;font-size:1.4rem;font-weight:700;border-radius:10px;"':''}/>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" min="0" max="20" id="m_${g.id}_${pa.id}_l" value="${ml}" placeholder="-"
+              style="width:52px;height:52px;text-align:center;font-size:1.6rem;font-weight:700;border-radius:12px;border:2px solid ${ml!==''?'var(--azul)':'#ddd'};background:${bloq?'#f5f5f5':'white'};"
+              ${bloq?'readonly disabled':''}/>
+            <span style="font-size:1.4rem;color:#bbb;font-weight:300;">:</span>
+            <input type="number" min="0" max="20" id="m_${g.id}_${pa.id}_v" value="${mv}" placeholder="-"
+              style="width:52px;height:52px;text-align:center;font-size:1.6rem;font-weight:700;border-radius:12px;border:2px solid ${mv!==''?'var(--azul)':'#ddd'};background:${bloq?'#f5f5f5':'white'};"
+              ${bloq?'readonly disabled':''}/>
           </div>
-          <div style="font-size:0.65rem;color:#aaa;margin-top:4px;">marcador</div>
+          <div style="font-size:0.65rem;color:#aaa;margin-top:6px;text-align:center;">marcador predicho</div>
         </div>
-        <div style="text-align:left;">
-          <div style="font-size:1.8rem;line-height:1;">${getBanderaTarjeton(pa.visita.n)||pa.visita.f}</div>
-          <div style="font-size:0.82rem;font-weight:700;margin-top:4px;">${pa.visita.n}</div>
+        <div style="text-align:center;">
+          <div style="font-size:2.2rem;line-height:1;">${eqV.f}</div>
+          <div style="font-size:0.82rem;font-weight:700;margin-top:6px;color:var(--azul);">${eqV.n}</div>
         </div>
       </div>
     </div>`;
   }).join('');
 
-  // Selectores de clasificados
-  const opts1 = g.equipos.map(e=>`<option value="${e.n}" ${pG.c1===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
-  const opts2 = g.equipos.map(e=>`<option value="${e.n}" ${pG.c2===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
+  // Clasificados de los grupos presentes en esta jornada
+  const clasificadosHTML = gruposEnJornada.map(gId => {
+    const g = GRUPOS.find(gr=>gr.id===gId);
+    if(!g) return '';
+    const pG = (pred.grupos||{})[g.id]||{};
+    const c1Val = pG.c1||'';
+    const c2Val = pG.c2||'';
+    const primerPartidoGrupo = getPartidosGrupo(g)[0];
+    const bloqClasif = (primerPartidoGrupo && partidoBloqueado(primerPartidoGrupo.local.n, primerPartidoGrupo.visita.n)) || (c1Val!==''&&c2Val!=='');
+    const opts1 = g.equipos.map(e=>`<option value="${e.n}" ${c1Val===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
+    const opts2 = g.equipos.map(e=>`<option value="${e.n}" ${c2Val===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
 
-  const clasifHTML = `<div style="background:${clasifBloqueados?'#f0fff4':'#fff5f5'};border:2px solid ${clasifBloqueados?'#28a745':'var(--rojo)'};border-radius:12px;padding:12px 14px;margin-bottom:10px;">
-    <div style="font-size:0.82rem;font-weight:700;color:${clasifBloqueados?'#155724':'var(--rojo)'};margin-bottom:10px;">
-      ${clasifBloqueados?'✅ Clasificados guardados':'⚠️ Obligatorio: ¿Quiénes clasifican de '+g.nombre+'?'}
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <div>
-        <label style="font-size:0.72rem;color:#888;display:block;margin-bottom:4px;">🥇 1° Clasificado</label>
-        <select id="g_${g.id}_c1" style="width:100%;padding:8px;border:2px solid ${clasifBloqueados?'#28a745':'var(--rojo)'};border-radius:8px;font-size:0.82rem;background:white;" ${clasifBloqueados?'disabled':''}>
-          <option value="">-- Elige --</option>${opts1}
-        </select>
+    return `<div style="background:${bloqClasif?'#f0fff4':'#fff5f5'};border:2px solid ${bloqClasif?'#28a745':'var(--rojo)'};border-radius:12px;padding:12px 14px;margin-bottom:10px;">
+      <div style="font-size:0.82rem;font-weight:700;color:${bloqClasif?'#155724':'var(--rojo)'};margin-bottom:10px;">
+        ${bloqClasif?'✅':'⚠️'} ¿Quiénes clasifican del <b>Grupo ${g.id}</b>?
       </div>
-      <div>
-        <label style="font-size:0.72rem;color:#888;display:block;margin-bottom:4px;">🥈 2° Clasificado</label>
-        <select id="g_${g.id}_c2" style="width:100%;padding:8px;border:2px solid ${clasifBloqueados?'#28a745':'var(--rojo)'};border-radius:8px;font-size:0.82rem;background:white;" ${clasifBloqueados?'disabled':''}>
-          <option value="">-- Elige --</option>${opts2}
-        </select>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>
+          <label style="font-size:0.7rem;color:#888;display:block;margin-bottom:3px;">🥇 1° Clasificado</label>
+          <select id="g_${g.id}_c1" style="width:100%;padding:8px;border:2px solid ${bloqClasif?'#28a745':'var(--rojo)'};border-radius:8px;font-size:0.8rem;" ${bloqClasif?'disabled':''}>
+            <option value="">-- Elige --</option>${opts1}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.7rem;color:#888;display:block;margin-bottom:3px;">🥈 2° Clasificado</label>
+          <select id="g_${g.id}_c2" style="width:100%;padding:8px;border:2px solid ${bloqClasif?'#28a745':'var(--rojo)'};border-radius:8px;font-size:0.8rem;" ${bloqClasif?'disabled':''}>
+            <option value="">-- Elige --</option>${opts2}
+          </select>
+        </div>
       </div>
-    </div>
-  </div>`;
+    </div>`;
+  }).join('');
 
-  document.getElementById('grupos-container').innerHTML = filas + clasifHTML;
-  } catch(e) { 
+  document.getElementById('grupos-container').innerHTML = tarjetas + clasificadosHTML;
+  } catch(e){
     console.error('Error renderGrupos:', e);
-    document.getElementById('grupos-container').innerHTML = '<div class="alerta alerta-warn">Error al cargar: '+e.message+'</div>';
+    document.getElementById('grupos-container').innerHTML = '<div class="alerta alerta-warn">Error: '+e.message+'</div>';
   }
 }
 function renderPartidosPredicciones(fase, partidos, containerId){
@@ -984,32 +1020,55 @@ function guardarFase(fase){
   const pred=getPredicciones(tarjetonActual.codigo);
 
   if(fase==='grupos'){
-    // Guardar solo el grupo actual (paginación)
-    const g = GRUPOS[grupoActualIdx];
-    const c1 = document.getElementById(`g_${g.id}_c1`)?.value || '';
-    const c2 = document.getElementById(`g_${g.id}_c2`)?.value || '';
+    // Guardar la jornada actual — todos los partidos visibles
+    const jornada = JORNADAS_CAL[jornadaActualIdx];
+    if(!pred.grupos) pred.grupos = {};
 
-    // Validar clasificados del grupo actual
-    if(!c1 || !c2){
-      mostrarAlerta('alerta-pred', `⚠️ Elige el 1° y 2° clasificado del ${g.nombre} antes de guardar.`, 'warn');
+    // Validar clasificados de grupos en esta jornada
+    const gruposEnJornada = [...new Set(jornada.partidos.map(p=>p.g))];
+    let gruposSinClasificados = [];
+    gruposEnJornada.forEach(gId => {
+      const c1 = document.getElementById(`g_${gId}_c1`)?.value || '';
+      const c2 = document.getElementById(`g_${gId}_c2`)?.value || '';
+      const pGGuardado = pred.grupos[gId]||{};
+      const c1Final = c1 || pGGuardado.c1 || '';
+      const c2Final = c2 || pGGuardado.c2 || '';
+      if(!c1Final || !c2Final) gruposSinClasificados.push('Grupo '+gId);
+    });
+    if(gruposSinClasificados.length > 0){
+      mostrarAlerta('alerta-pred', `⚠️ Elige los clasificados de: ${gruposSinClasificados.join(', ')}`, 'warn');
       return;
     }
 
-    // Guardar marcadores del grupo actual
-    if(!pred.grupos) pred.grupos = {};
-    const marcadores = {};
-    getPartidosGrupo(g).forEach(pa=>{
-      marcadores[pa.id+'_l'] = document.getElementById(`m_${g.id}_${pa.id}_l`)?.value||'';
-      marcadores[pa.id+'_v'] = document.getElementById(`m_${g.id}_${pa.id}_v`)?.value||'';
+    // Guardar marcadores de cada partido de la jornada
+    jornada.partidos.forEach(p => {
+      const g = GRUPOS.find(gr=>gr.equipos.some(e=>e.n===p.l));
+      if(!g) return;
+      const partidos = getPartidosGrupo(g);
+      const pa = partidos.find(pt=>pt.local.n===p.l&&pt.visita.n===p.v);
+      if(!pa) return;
+      if(!pred.grupos[g.id]) pred.grupos[g.id] = {c1:'',c2:'',marcadores:{}};
+      pred.grupos[g.id].marcadores = pred.grupos[g.id].marcadores || {};
+      const vl = document.getElementById(`m_${g.id}_${pa.id}_l`)?.value||'';
+      const vv = document.getElementById(`m_${g.id}_${pa.id}_v`)?.value||'';
+      pred.grupos[g.id].marcadores[pa.id+'_l'] = vl;
+      pred.grupos[g.id].marcadores[pa.id+'_v'] = vv;
     });
-    pred.grupos[g.id] = {c1, c2, marcadores};
+
+    // Guardar clasificados
+    gruposEnJornada.forEach(gId => {
+      const c1 = document.getElementById(`g_${gId}_c1`)?.value || pred.grupos[gId]?.c1 || '';
+      const c2 = document.getElementById(`g_${gId}_c2`)?.value || pred.grupos[gId]?.c2 || '';
+      if(!pred.grupos[gId]) pred.grupos[gId] = {c1:'',c2:'',marcadores:{}};
+      pred.grupos[gId].c1 = c1;
+      pred.grupos[gId].c2 = c2;
+    });
+
     setPredicciones(tarjetonActual.codigo, pred);
-    mostrarToast(`✅ ${g.nombre} guardado`);
+    mostrarToast(`✅ ${jornada.titulo} guardada`);
     actualizarProgreso();
-    // Avanzar automáticamente al siguiente grupo
-    if(grupoActualIdx < GRUPOS.length-1){
-      grupoActualIdx++;
-    }
+    // Avanzar a la siguiente jornada
+    if(jornadaActualIdx < JORNADAS_CAL.length-1) jornadaActualIdx++;
     renderGruposPredicciones();
 
   }else if(fase==='dieciseisavos'){
