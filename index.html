@@ -342,14 +342,25 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--fondo); co
       <button class="tab" onclick="switchTab('tarjeton')">🎫 Tarjetón</button>
     </div>
     <div id="tab-grupos" class="tab-content active">
+      <!-- Aviso importante -->
       <div style="background:#fde8e8;border:1.5px solid var(--rojo);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.82rem;color:#721c24;">
-        🔴 <b>Importante:</b> Elige los clasificados (1° y 2°) de cada grupo <b>antes del primer partido del grupo.</b> Después no podrás editarlos.
+        🔴 <b>Importante:</b> Debes elegir el 1° y 2° clasificado de cada grupo. Sin eso no puedes guardar.
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-        <button onclick="guardarFase('grupos')" style="background:var(--rojo);color:white;border:none;padding:9px 20px;border-radius:20px;font-size:0.85rem;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(200,16,46,0.35);">💾 Guardar predicciones</button>
+      <!-- Navegación paginada -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <button id="btn-grupo-prev" onclick="cambiarGrupo(-1)" style="background:var(--azul);color:white;border:none;padding:8px 16px;border-radius:20px;font-size:0.85rem;font-weight:700;cursor:pointer;opacity:0.4;" disabled>← Anterior</button>
+        <div style="text-align:center;">
+          <div id="grupo-indicador" style="font-size:0.9rem;font-weight:700;color:var(--azul);">Grupo A</div>
+          <div id="grupo-progreso-ind" style="font-size:0.72rem;color:#888;">1 de 12</div>
+        </div>
+        <button id="btn-grupo-next" onclick="cambiarGrupo(1)" style="background:var(--azul);color:white;border:none;padding:8px 16px;border-radius:20px;font-size:0.85rem;font-weight:700;cursor:pointer;">Siguiente →</button>
       </div>
+      <!-- Contenedor del grupo actual -->
       <div id="grupos-container"></div>
-      <button class="btn-accion" onclick="guardarFase('grupos')">💾 Guardar grupos</button>
+      <!-- Botones guardar -->
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button onclick="guardarFase('grupos')" style="flex:1;background:var(--rojo);color:white;border:none;padding:12px;border-radius:20px;font-size:0.9rem;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(200,16,46,0.35);">💾 Guardar este grupo</button>
+      </div>
     </div>
     <div id="tab-dieciseisavos" class="tab-content"><div class="alerta alerta-info">Selecciona el ganador de cada partido de Dieciseisavos</div><div id="dieciseisavos-container"></div><button class="btn-accion" onclick="guardarFase('dieciseisavos')">💾 Guardar dieciseisavos</button></div>
     <div id="tab-octavos" class="tab-content"><div class="alerta alerta-info">Selecciona el ganador de cada partido</div><div id="octavos-container"></div><button class="btn-accion" onclick="guardarFase('octavos')">💾 Guardar octavos</button></div>
@@ -763,11 +774,14 @@ function getPartidosGrupo(g){
 }
 function abrirSoloTarjeton(cedula,codigo){abrirPredicciones(cedula,codigo);setTimeout(()=>switchTab('tarjeton'),300);}
 function abrirPredicciones(cedula,codigo){
-  tarjetonActual={cedula,codigo};
-  const p=getParticipantes()[cedula];
-  document.getElementById('pred-nombre-display').textContent=p.nombre;
-  document.getElementById('pred-codigo-display').textContent='Tarjetón: '+codigo;
-  renderGruposPredicciones();
+  try{
+    tarjetonActual={cedula,codigo};
+    const p=getParticipantes()[cedula];
+    if(!p){alert('No se encontró el participante. Intenta de nuevo.');return;}
+    document.getElementById('pred-nombre-display').textContent=p.nombre;
+    document.getElementById('pred-codigo-display').textContent='Tarjetón: '+codigo;
+    grupoActualIdx = 0;
+    renderGruposPredicciones();
   renderPartidosPredicciones('dieciseisavos',PARTIDOS_DIECISEISAVOS,'dieciseisavos-container');
   renderPartidosPredicciones('octavos',PARTIDOS_OCTAVOS,'octavos-container');
   renderPartidosPredicciones('cuartos',PARTIDOS_CUARTOS,'cuartos-container');
@@ -777,75 +791,124 @@ function abrirPredicciones(cedula,codigo){
   switchTab('grupos');
   irA('predicciones');
   actualizarProgreso();
+  } catch(e){ console.error('Error abrirPredicciones:',e); alert('Error al abrir predicciones: '+e.message); }
 }
+// Índice del grupo actual en la paginación
+let grupoActualIdx = 0;
+
+function cambiarGrupo(dir){
+  grupoActualIdx = Math.max(0, Math.min(GRUPOS.length-1, grupoActualIdx + dir));
+  renderGruposPredicciones();
+}
+
 function renderGruposPredicciones(){
-  const pred=getPredicciones(tarjetonActual.codigo);
-  document.getElementById('grupos-container').innerHTML=GRUPOS.map(g=>{
-    const pG=(pred.grupos||{})[g.id]||{};
-    const partidos=getPartidosGrupo(g);
-    const c1Val = pG.c1||'';
-    const c2Val = pG.c2||'';
-    
-    // Verificar bloqueo
-    const primerPartido = partidos[0];
-    const primerBloq = primerPartido && partidoBloqueado(primerPartido.local.n, primerPartido.visita.n);
-    const yaGuardados = c1Val !== '' && c2Val !== '';
-    const clasifBloqueados = primerBloq || yaGuardados;
+  try {
+  const pred = getPredicciones(tarjetonActual.codigo);
+  const g = GRUPOS[grupoActualIdx];
+  const pG = (pred.grupos||{})[g.id] || {};
+  const partidos = getPartidosGrupo(g);
 
-    const filas=partidos.map(pa=>{
-      const bloq = partidoBloqueado(pa.local.n, pa.visita.n);
-      const ml=(pG.marcadores||{})[pa.id+'_l']||'';
-      const mv=(pG.marcadores||{})[pa.id+'_v']||'';
-      return `<div class="partido-grupo" style="position:relative;">
-        ${bloq?`<div style="position:absolute;top:4px;right:6px;"><span style="background:#fff3cd;color:#856404;padding:1px 7px;border-radius:8px;font-size:0.65rem;font-weight:700;">🔒 Bloqueado</span></div>`:''}
-        <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;width:100%;">
-          <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;">
-            <span style="font-size:0.83rem;font-weight:600;text-align:right">${pa.local.n}</span>
-            <span class="eq-flag">${getBanderaTarjeton(pa.local.n)||pa.local.f}</span>
-          </div>
-          <div class="marcador-box" style="flex-shrink:0;">
-            <input class="marcador-input" type="text" inputmode="numeric" maxlength="2" id="m_${g.id}_${pa.id}_l" value="${ml}" placeholder="0" ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;"':''}/>
-            <span class="marcador-sep">-</span>
-            <input class="marcador-input" type="text" inputmode="numeric" maxlength="2" id="m_${g.id}_${pa.id}_v" value="${mv}" placeholder="0" ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;"':''}/>
-          </div>
-          <div style="display:flex;align-items:center;gap:5px;">
-            <span class="eq-flag">${getBanderaTarjeton(pa.visita.n)||pa.visita.f}</span>
-            <span style="font-size:0.83rem;font-weight:600">${pa.visita.n}</span>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
+  // Actualizar navegación
+  const indEl = document.getElementById('grupo-indicador');
+  const progEl = document.getElementById('grupo-progreso-ind');
+  const prevBtn = document.getElementById('btn-grupo-prev');
+  const nextBtn = document.getElementById('btn-grupo-next');
+  if(indEl) indEl.textContent = g.nombre;
+  if(progEl){
+    // Contar cuántos grupos tienen clasificados guardados
+    let guardados = 0;
+    GRUPOS.forEach(gr => {
+      const pg = (pred.grupos||{})[gr.id]||{};
+      if(pg.c1 && pg.c2) guardados++;
+    });
+    progEl.textContent = `${grupoActualIdx+1} de 12 — ${guardados}/12 grupos completos`;
+  }
+  if(prevBtn){ prevBtn.disabled = grupoActualIdx===0; prevBtn.style.opacity = grupoActualIdx===0?'0.4':'1'; }
+  if(nextBtn){ nextBtn.disabled = grupoActualIdx===GRUPOS.length-1; nextBtn.style.opacity = grupoActualIdx===GRUPOS.length-1?'0.4':'1'; }
 
-    const opts = g.equipos.map(e=>`<option value="${e.n}" ${c1Val===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
-    const opts2 = g.equipos.map(e=>`<option value="${e.n}" ${c2Val===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
+  // Bloqueo de clasificados
+  const primerPartido = partidos[0];
+  const primerBloq = primerPartido && partidoBloqueado(primerPartido.local.n, primerPartido.visita.n);
+  const yaGuardados = pG.c1 && pG.c1!=='' && pG.c2 && pG.c2!=='';
+  const clasifBloqueados = primerBloq || yaGuardados;
 
-    return `<div class="partido-card">
-      <div style="background:var(--azul);color:white;padding:8px 14px;border-radius:10px;font-weight:700;font-size:0.88rem;margin-bottom:10px;">
-        ⚽ ${g.nombre}
+  // Ordenar partidos por hora
+  const partidosOrdenados = [...partidos].sort((a,b)=>{
+    const pa = PARTIDOS_CAL.find(p=>p.local===a.local.n&&p.visita===a.visita.n);
+    const pb = PARTIDOS_CAL.find(p=>p.local===b.local.n&&p.visita===b.visita.n);
+    if(!pa||!pb) return 0;
+    const fa = pa.fecha+pa.hora;
+    const fb = pb.fecha+pb.hora;
+    return fa.localeCompare(fb);
+  });
+
+  // Generar filas de partidos
+  const filas = partidosOrdenados.map(pa=>{
+    const bloq = partidoBloqueado(pa.local.n, pa.visita.n);
+    const ml = (pG.marcadores||{})[pa.id+'_l']||'';
+    const mv = (pG.marcadores||{})[pa.id+'_v']||'';
+    const partidoCal = PARTIDOS_CAL.find(p=>p.local===pa.local.n&&p.visita===pa.visita.n);
+    const horario = partidoCal ? `${partidoCal.fecha} ${partidoCal.hora}` : '';
+
+    return `<div style="background:white;border-radius:12px;padding:12px 14px;margin-bottom:10px;border:1px solid #e8edf5;">
+      <div style="font-size:0.7rem;color:#999;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+        <span>📅 ${horario}</span>
+        ${bloq?'<span style="background:#fff3cd;color:#856404;padding:2px 8px;border-radius:8px;font-size:0.65rem;font-weight:700;">🔒 Bloqueado</span>':'<span style="background:#e8f4fd;color:#0C447C;padding:2px 8px;border-radius:8px;font-size:0.65rem;font-weight:700;">✏️ Editable</span>'}
       </div>
-      ${filas}
-      <div style="margin-top:12px;background:#f8f9ff;border-radius:10px;padding:10px 12px;border:1px solid #e0e8ff;">
-        <div style="font-size:0.78rem;font-weight:700;color:var(--azul);margin-bottom:8px;">
-          🏅 ¿Quiénes clasifican de este grupo?
-          ${clasifBloqueados?'<span style="background:#28a745;color:white;padding:1px 8px;border-radius:8px;font-size:0.65rem;margin-left:6px;">✅ Guardado</span>':'<span style="background:var(--rojo);color:white;padding:1px 8px;border-radius:8px;font-size:0.65rem;margin-left:6px;">⚠️ Obligatorio</span>'}
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;">
+        <div style="text-align:right;">
+          <div style="font-size:1.8rem;line-height:1;">${getBanderaTarjeton(pa.local.n)||pa.local.f}</div>
+          <div style="font-size:0.82rem;font-weight:700;margin-top:4px;">${pa.local.n}</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div>
-            <label style="font-size:0.72rem;color:#888;display:block;margin-bottom:3px;">🥇 1° Clasificado</label>
-            <select id="g_${g.id}_c1" style="width:100%;padding:8px;border:2px solid ${clasifBloqueados?'#28a745':'var(--rojo)'};border-radius:8px;font-size:0.82rem;${clasifBloqueados?'background:#f0fff4;color:#155724;cursor:not-allowed;':''}" ${clasifBloqueados?'disabled':''}>
-              <option value="">-- Selecciona --</option>${opts}
-            </select>
+        <div style="text-align:center;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input class="marcador-input" type="number" min="0" max="20" id="m_${g.id}_${pa.id}_l" value="${ml}" placeholder="0"
+              style="width:48px;height:48px;text-align:center;font-size:1.4rem;font-weight:700;border-radius:10px;border:2px solid ${ml!==''?'var(--azul)':'var(--gris)'};"
+              ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;width:48px;height:48px;text-align:center;font-size:1.4rem;font-weight:700;border-radius:10px;"':''}/>
+            <span style="font-size:1.5rem;font-weight:700;color:#999;">-</span>
+            <input class="marcador-input" type="number" min="0" max="20" id="m_${g.id}_${pa.id}_v" value="${mv}" placeholder="0"
+              style="width:48px;height:48px;text-align:center;font-size:1.4rem;font-weight:700;border-radius:10px;border:2px solid ${mv!==''?'var(--azul)':'var(--gris)'};"
+              ${bloq?'readonly disabled style="background:#f0f0f0;color:#999;cursor:not-allowed;width:48px;height:48px;text-align:center;font-size:1.4rem;font-weight:700;border-radius:10px;"':''}/>
           </div>
-          <div>
-            <label style="font-size:0.72rem;color:#888;display:block;margin-bottom:3px;">🥈 2° Clasificado</label>
-            <select id="g_${g.id}_c2" style="width:100%;padding:8px;border:2px solid ${clasifBloqueados?'#28a745':'var(--rojo)'};border-radius:8px;font-size:0.82rem;${clasifBloqueados?'background:#f0fff4;color:#155724;cursor:not-allowed;':''}" ${clasifBloqueados?'disabled':''}>
-              <option value="">-- Selecciona --</option>${opts2}
-            </select>
-          </div>
+          <div style="font-size:0.65rem;color:#aaa;margin-top:4px;">marcador</div>
+        </div>
+        <div style="text-align:left;">
+          <div style="font-size:1.8rem;line-height:1;">${getBanderaTarjeton(pa.visita.n)||pa.visita.f}</div>
+          <div style="font-size:0.82rem;font-weight:700;margin-top:4px;">${pa.visita.n}</div>
         </div>
       </div>
     </div>`;
   }).join('');
+
+  // Selectores de clasificados
+  const opts1 = g.equipos.map(e=>`<option value="${e.n}" ${pG.c1===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
+  const opts2 = g.equipos.map(e=>`<option value="${e.n}" ${pG.c2===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
+
+  const clasifHTML = `<div style="background:${clasifBloqueados?'#f0fff4':'#fff5f5'};border:2px solid ${clasifBloqueados?'#28a745':'var(--rojo)'};border-radius:12px;padding:12px 14px;margin-bottom:10px;">
+    <div style="font-size:0.82rem;font-weight:700;color:${clasifBloqueados?'#155724':'var(--rojo)'};margin-bottom:10px;">
+      ${clasifBloqueados?'✅ Clasificados guardados':'⚠️ Obligatorio: ¿Quiénes clasifican de '+g.nombre+'?'}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>
+        <label style="font-size:0.72rem;color:#888;display:block;margin-bottom:4px;">🥇 1° Clasificado</label>
+        <select id="g_${g.id}_c1" style="width:100%;padding:8px;border:2px solid ${clasifBloqueados?'#28a745':'var(--rojo)'};border-radius:8px;font-size:0.82rem;background:white;" ${clasifBloqueados?'disabled':''}>
+          <option value="">-- Elige --</option>${opts1}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.72rem;color:#888;display:block;margin-bottom:4px;">🥈 2° Clasificado</label>
+        <select id="g_${g.id}_c2" style="width:100%;padding:8px;border:2px solid ${clasifBloqueados?'#28a745':'var(--rojo)'};border-radius:8px;font-size:0.82rem;background:white;" ${clasifBloqueados?'disabled':''}>
+          <option value="">-- Elige --</option>${opts2}
+        </select>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('grupos-container').innerHTML = filas + clasifHTML;
+  } catch(e) { 
+    console.error('Error renderGrupos:', e);
+    document.getElementById('grupos-container').innerHTML = '<div class="alerta alerta-warn">Error al cargar: '+e.message+'</div>';
+  }
 }
 function renderPartidosPredicciones(fase, partidos, containerId){
   const pred = getPredicciones(tarjetonActual.codigo);
@@ -918,42 +981,33 @@ function guardarFase(fase){
   const pred=getPredicciones(tarjetonActual.codigo);
 
   if(fase==='grupos'){
-    // Validar SIEMPRE los 12 grupos — leer del DOM o de predicciones guardadas
-    const predActual = getPredicciones(tarjetonActual.codigo);
-    let gruposSinClasificados = [];
-    GRUPOS.forEach(g => {
-      // Intentar leer del DOM primero, si está disabled leer de lo guardado
-      const selC1 = document.getElementById(`g_${g.id}_c1`);
-      const selC2 = document.getElementById(`g_${g.id}_c2`);
-      const c1DOM = selC1?.value || '';
-      const c2DOM = selC2?.value || '';
-      const c1Guardado = predActual?.grupos?.[g.id]?.c1 || '';
-      const c2Guardado = predActual?.grupos?.[g.id]?.c2 || '';
-      const c1Final = c1DOM || c1Guardado;
-      const c2Final = c2DOM || c2Guardado;
-      if(!c1Final || !c2Final) gruposSinClasificados.push(g.nombre);
-    });
-    if(gruposSinClasificados.length > 0){
-      mostrarAlerta('alerta-pred',`⚠️ Predicción incompleta — Selecciona los clasificados de: ${gruposSinClasificados.join(', ')}`,'warn');
+    // Guardar solo el grupo actual (paginación)
+    const g = GRUPOS[grupoActualIdx];
+    const c1 = document.getElementById(`g_${g.id}_c1`)?.value || '';
+    const c2 = document.getElementById(`g_${g.id}_c2`)?.value || '';
+
+    // Validar clasificados del grupo actual
+    if(!c1 || !c2){
+      mostrarAlerta('alerta-pred', `⚠️ Elige el 1° y 2° clasificado del ${g.nombre} antes de guardar.`, 'warn');
       return;
     }
-    // Guardar grupos
-    pred.grupos={};
-    GRUPOS.forEach(g=>{
-      const marcadores={};
-      getPartidosGrupo(g).forEach(pa=>{
-        marcadores[pa.id+'_l']=document.getElementById(`m_${g.id}_${pa.id}_l`)?.value||'';
-        marcadores[pa.id+'_v']=document.getElementById(`m_${g.id}_${pa.id}_v`)?.value||'';
-      });
-      pred.grupos[g.id]={
-        c1:document.getElementById(`g_${g.id}_c1`)?.value||'',
-        c2:document.getElementById(`g_${g.id}_c2`)?.value||'',
-        marcadores
-      };
+
+    // Guardar marcadores del grupo actual
+    if(!pred.grupos) pred.grupos = {};
+    const marcadores = {};
+    getPartidosGrupo(g).forEach(pa=>{
+      marcadores[pa.id+'_l'] = document.getElementById(`m_${g.id}_${pa.id}_l`)?.value||'';
+      marcadores[pa.id+'_v'] = document.getElementById(`m_${g.id}_${pa.id}_v`)?.value||'';
     });
-    setPredicciones(tarjetonActual.codigo,pred);
-    mostrarToast('✅ Predicciones de grupos guardadas');
+    pred.grupos[g.id] = {c1, c2, marcadores};
+    setPredicciones(tarjetonActual.codigo, pred);
+    mostrarToast(`✅ ${g.nombre} guardado`);
     actualizarProgreso();
+    // Avanzar automáticamente al siguiente grupo
+    if(grupoActualIdx < GRUPOS.length-1){
+      grupoActualIdx++;
+    }
+    renderGruposPredicciones();
 
   }else if(fase==='dieciseisavos'){
     pred.dieciseisavos={};
@@ -1020,7 +1074,7 @@ function actualizarProgreso(){
   document.getElementById('progreso-texto').textContent=pct+'% de predicciones completadas';
 }
 function switchTab(tab){
-  const tabs=['grupos','octavos','cuartos','semis','final','tarjeton'];
+  const tabs=['grupos','dieciseisavos','octavos','cuartos','semis','final','tarjeton'];
   document.querySelectorAll('#pred-tabs .tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===tab));
   document.querySelectorAll('[id^="tab-"]').forEach(t=>t.classList.remove('active'));
   const el=document.getElementById('tab-'+tab);
