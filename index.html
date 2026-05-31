@@ -800,23 +800,23 @@ function abrirPredicciones(cedula,codigo){
 let jornadaActualIdx = 0;
 
 const JORNADAS_CAL = [
-  {titulo:'Jueves 11 de Junio',partidos:[{l:'México',v:'Sudáfrica',g:'A',h:'15:00'},{l:'República de Corea',v:'Chequia',g:'A',h:'22:00'}]},
-  {titulo:'Viernes 12 de Junio',partidos:[{l:'Canadá',v:'Bosnia y Herzegovina',g:'B',h:'15:00'},{l:'EE. UU.',v:'Paraguay',g:'D',h:'21:00'}]},
+  {titulo:'Jueves 11 de Junio',partidos:[{l:'México',v:'Sudáfrica',g:'A',h:'15:00'},{l:'Corea del Sur',v:'Rep. Checa',g:'A',h:'22:00'}]},
+  {titulo:'Viernes 12 de Junio',partidos:[{l:'Canadá',v:'Bosnia-Herz.',g:'B',h:'15:00'},{l:'Estados Unidos',v:'Paraguay',g:'D',h:'21:00'}]},
   {titulo:'Sábado 13 de Junio',partidos:[{l:'Catar',v:'Suiza',g:'B',h:'15:00'},{l:'Brasil',v:'Marruecos',g:'C',h:'18:00'},{l:'Haití',v:'Escocia',g:'C',h:'21:00'},{l:'Australia',v:'Turquía',g:'D',h:'00:00'}]},
-  {titulo:'Domingo 14 de Junio',partidos:[{l:'Alemania',v:'Curazao',g:'E',h:'13:00'},{l:'Países Bajos',v:'Japón',g:'F',h:'16:00'},{l:'Costa de Marfil',v:'Ecuador',g:'E',h:'19:00'},{l:'Suecia',v:'Túnez',g:'F',h:'22:00'}]},
-  {titulo:'Lunes 15 de Junio',partidos:[{l:'España',v:'Islas de Cabo Verde',g:'H',h:'12:00'},{l:'Bélgica',v:'Egipto',g:'G',h:'15:00'},{l:'Arabia Saudí',v:'Uruguay',g:'H',h:'18:00'},{l:'RI de Irán',v:'Nueva Zelanda',g:'G',h:'21:00'}]},
+  {titulo:'Domingo 14 de Junio',partidos:[{l:'Alemania',v:'Curaçao',g:'E',h:'13:00'},{l:'Países Bajos',v:'Japón',g:'F',h:'16:00'},{l:'Costa de Marfil',v:'Ecuador',g:'E',h:'19:00'},{l:'Suecia',v:'Túnez',g:'F',h:'22:00'}]},
+  {titulo:'Lunes 15 de Junio',partidos:[{l:'España',v:'Cabo Verde',g:'H',h:'12:00'},{l:'Bélgica',v:'Egipto',g:'G',h:'15:00'},{l:'Arabia Saudí',v:'Uruguay',g:'H',h:'18:00'},{l:'Irán',v:'Nueva Zelanda',g:'G',h:'21:00'}]},
   {titulo:'Martes 16 de Junio',partidos:[{l:'Francia',v:'Senegal',g:'I',h:'15:00'},{l:'Irak',v:'Noruega',g:'I',h:'18:00'},{l:'Argentina',v:'Argelia',g:'J',h:'21:00'},{l:'Austria',v:'Jordania',g:'J',h:'00:00'}]},
-  {titulo:'Miércoles 17 de Junio',partidos:[{l:'Portugal',v:'RD Congo',g:'K',h:'13:00'},{l:'Inglaterra',v:'Croacia',g:'L',h:'16:00'},{l:'Ghana',v:'Panamá',g:'L',h:'19:00'},{l:'Uzbekistán',v:'Colombia',g:'K',h:'22:00'}]},
-  {titulo:'Jueves 18 de Junio',partidos:[{l:'Chequia',v:'Sudáfrica',g:'A',h:'12:00'},{l:'Suiza',v:'Bosnia y Herzegovina',g:'B',h:'15:00'},{l:'Canadá',v:'Catar',g:'B',h:'18:00'},{l:'México',v:'República de Corea',g:'A',h:'21:00'}]},
-  {titulo:'Viernes 19 de Junio',partidos:[{l:'EE. UU.',v:'Australia',g:'D',h:'15:00'},{l:'Escocia',v:'Marruecos',g:'C',h:'18:00'},{l:'Brasil',v:'Haití',g:'C',h:'21:00'},{l:'Turquía',v:'Paraguay',g:'D',h:'00:00'}]},
-  {titulo:'Sábado 20 de Junio',partidos:[{l:'Países Bajos',v:'Suecia',g:'F',h:'13:00'},{l:'Alemania',v:'Costa de Marfil',g:'E',h:'16:00'},{l:'Ecuador',v:'Curazao',g:'E',h:'22:00'},{l:'Túnez',v:'Japón',g:'F',h:'00:00'}]},
-  {titulo:'Domingo 21 de Junio',partidos:[{l:'España',v:'Arabia Saudí',g:'H',h:'12:00'},{l:'Bélgica',v:'RI de Irán',g:'G',h:'15:00'},{l:'Uruguay',v:'Islas de Cabo Verde',g:'H',h:'18:00'},{l:'Nueva Zelanda',v:'Egipto',g:'G',h:'21:00'}]},
+  {titulo:'Miércoles 17 de Junio',partidos:[{l:'Portugal',v:'R.D. Congo',g:'K',h:'13:00'},{l:'Inglaterra',v:'Croacia',g:'L',h:'16:00'},{l:'Ghana',v:'Panamá',g:'L',h:'19:00'},{l:'Uzbekistán',v:'Colombia',g:'K',h:'22:00'}]},
+  {titulo:'Jueves 18 de Junio',partidos:[{l:'Rep. Checa',v:'Sudáfrica',g:'A',h:'12:00'},{l:'Suiza',v:'Bosnia-Herz.',g:'B',h:'15:00'},{l:'Canadá',v:'Catar',g:'B',h:'18:00'},{l:'México',v:'Corea del Sur',g:'A',h:'21:00'}]},
+  {titulo:'Viernes 19 de Junio',partidos:[{l:'Estados Unidos',v:'Australia',g:'D',h:'15:00'},{l:'Escocia',v:'Marruecos',g:'C',h:'18:00'},{l:'Brasil',v:'Haití',g:'C',h:'21:00'},{l:'Turquía',v:'Paraguay',g:'D',h:'00:00'}]},
+  {titulo:'Sábado 20 de Junio',partidos:[{l:'Países Bajos',v:'Suecia',g:'F',h:'13:00'},{l:'Alemania',v:'Costa de Marfil',g:'E',h:'16:00'},{l:'Ecuador',v:'Curaçao',g:'E',h:'22:00'},{l:'Túnez',v:'Japón',g:'F',h:'00:00'}]},
+  {titulo:'Domingo 21 de Junio',partidos:[{l:'España',v:'Arabia Saudí',g:'H',h:'12:00'},{l:'Bélgica',v:'Irán',g:'G',h:'15:00'},{l:'Uruguay',v:'Cabo Verde',g:'H',h:'18:00'},{l:'Nueva Zelanda',v:'Egipto',g:'G',h:'21:00'}]},
   {titulo:'Lunes 22 de Junio',partidos:[{l:'Argentina',v:'Austria',g:'J',h:'13:00'},{l:'Francia',v:'Irak',g:'I',h:'17:00'},{l:'Noruega',v:'Senegal',g:'I',h:'20:00'},{l:'Jordania',v:'Argelia',g:'J',h:'23:00'}]},
-  {titulo:'Martes 23 de Junio',partidos:[{l:'Portugal',v:'Uzbekistán',g:'K',h:'13:00'},{l:'Inglaterra',v:'Ghana',g:'L',h:'16:00'},{l:'Panamá',v:'Croacia',g:'L',h:'19:00'},{l:'Colombia',v:'RD Congo',g:'K',h:'22:00'}]},
-  {titulo:'Miércoles 24 de Junio',partidos:[{l:'Suiza',v:'Canadá',g:'B',h:'15:00'},{l:'Bosnia y Herzegovina',v:'Catar',g:'B',h:'15:00'},{l:'Escocia',v:'Brasil',g:'C',h:'18:00'},{l:'Marruecos',v:'Haití',g:'C',h:'18:00'},{l:'Chequia',v:'México',g:'A',h:'21:00'},{l:'Sudáfrica',v:'República de Corea',g:'A',h:'21:00'}]},
-  {titulo:'Jueves 25 de Junio',partidos:[{l:'Curazao',v:'Costa de Marfil',g:'E',h:'16:00'},{l:'Ecuador',v:'Alemania',g:'E',h:'16:00'},{l:'Japón',v:'Suecia',g:'F',h:'19:00'},{l:'Túnez',v:'Países Bajos',g:'F',h:'19:00'},{l:'Turquía',v:'EE. UU.',g:'D',h:'22:00'},{l:'Paraguay',v:'Australia',g:'D',h:'22:00'}]},
-  {titulo:'Viernes 26 de Junio',partidos:[{l:'Noruega',v:'Francia',g:'I',h:'15:00'},{l:'Senegal',v:'Irak',g:'I',h:'15:00'},{l:'Islas de Cabo Verde',v:'Arabia Saudí',g:'H',h:'20:00'},{l:'Uruguay',v:'España',g:'H',h:'20:00'},{l:'Egipto',v:'RI de Irán',g:'G',h:'23:00'},{l:'Nueva Zelanda',v:'Bélgica',g:'G',h:'23:00'}]},
-  {titulo:'Sábado 27 de Junio',partidos:[{l:'Panamá',v:'Inglaterra',g:'L',h:'17:00'},{l:'Croacia',v:'Ghana',g:'L',h:'17:00'},{l:'Colombia',v:'Portugal',g:'K',h:'19:30'},{l:'RD Congo',v:'Uzbekistán',g:'K',h:'19:30'},{l:'Argelia',v:'Austria',g:'J',h:'22:00'},{l:'Jordania',v:'Argentina',g:'J',h:'22:00'}]},
+  {titulo:'Martes 23 de Junio',partidos:[{l:'Portugal',v:'Uzbekistán',g:'K',h:'13:00'},{l:'Inglaterra',v:'Ghana',g:'L',h:'16:00'},{l:'Panamá',v:'Croacia',g:'L',h:'19:00'},{l:'Colombia',v:'R.D. Congo',g:'K',h:'22:00'}]},
+  {titulo:'Miércoles 24 de Junio',partidos:[{l:'Suiza',v:'Canadá',g:'B',h:'15:00'},{l:'Bosnia-Herz.',v:'Catar',g:'B',h:'15:00'},{l:'Escocia',v:'Brasil',g:'C',h:'18:00'},{l:'Marruecos',v:'Haití',g:'C',h:'18:00'},{l:'Rep. Checa',v:'México',g:'A',h:'21:00'},{l:'Sudáfrica',v:'Corea del Sur',g:'A',h:'21:00'}]},
+  {titulo:'Jueves 25 de Junio',partidos:[{l:'Curaçao',v:'Costa de Marfil',g:'E',h:'16:00'},{l:'Ecuador',v:'Alemania',g:'E',h:'16:00'},{l:'Japón',v:'Suecia',g:'F',h:'19:00'},{l:'Túnez',v:'Países Bajos',g:'F',h:'19:00'},{l:'Turquía',v:'Estados Unidos',g:'D',h:'22:00'},{l:'Paraguay',v:'Australia',g:'D',h:'22:00'}]},
+  {titulo:'Viernes 26 de Junio',partidos:[{l:'Noruega',v:'Francia',g:'I',h:'15:00'},{l:'Senegal',v:'Irak',g:'I',h:'15:00'},{l:'Cabo Verde',v:'Arabia Saudí',g:'H',h:'20:00'},{l:'Uruguay',v:'España',g:'H',h:'20:00'},{l:'Egipto',v:'Irán',g:'G',h:'23:00'},{l:'Nueva Zelanda',v:'Bélgica',g:'G',h:'23:00'}]},
+  {titulo:'Sábado 27 de Junio',partidos:[{l:'Panamá',v:'Inglaterra',g:'L',h:'17:00'},{l:'Croacia',v:'Ghana',g:'L',h:'17:00'},{l:'Colombia',v:'Portugal',g:'K',h:'19:30'},{l:'R.D. Congo',v:'Uzbekistán',g:'K',h:'19:30'},{l:'Argelia',v:'Austria',g:'J',h:'22:00'},{l:'Jordania',v:'Argentina',g:'J',h:'22:00'}]},
 ];
 
 function cambiarJornada(dir){
@@ -952,28 +952,38 @@ function renderGruposPredicciones(){
 function renderPartidosPredicciones(fase, partidos, containerId){
   const pred = getPredicciones(tarjetonActual.codigo);
   const predFase = pred[fase] || {};
-  
-  // Todos los equipos del mundial para los selectores
   const equipos = GRUPOS.flatMap(g => g.equipos);
-  
-  document.getElementById(containerId).innerHTML = partidos.map((p,idx) => {
+
+  document.getElementById(containerId).innerHTML = partidos.map((p, idx) => {
     const v = predFase[p.id] || '';
-    const opts = equipos.map(e => 
+    // Encontrar los dos equipos del partido basado en el label
+    // Para dieciseisavos/octavos/etc mostramos las opciones como tarjetas
+    const selOpts = equipos.map(e =>
       `<option value="${e.n}" ${v===e.n?'selected':''}>${e.f} ${e.n}</option>`
     ).join('');
-    
-    return `<div style="background:white;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.06);border-left:3px solid var(--azul);">
-      <div style="font-size:0.75rem;color:#888;margin-bottom:8px;">
+
+    // Si hay un ganador seleccionado, mostrar el equipo
+    const eq = equipos.find(e => e.n === v);
+
+    return `<div style="background:white;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border:1px solid #e8edf5;">
+      <div style="font-size:0.72rem;color:#888;margin-bottom:8px;font-weight:600;">
         Partido ${idx+1} — ${p.lbl}
       </div>
-      <div style="font-size:0.82rem;font-weight:700;color:var(--azul);margin-bottom:6px;">
-        🏆 ¿Quién gana este partido?
-      </div>
-      <select id="o_${p.id}" style="width:100%;padding:10px;border:2px solid var(--gris);border-radius:8px;font-size:0.85rem;background:white;">
-        <option value="">-- Selecciona el ganador --</option>
-        ${opts}
+      ${v && eq ? `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;background:#f0fff4;border-radius:10px;padding:10px;">
+        <div style="font-size:2rem;">${eq.f}</div>
+        <div>
+          <div style="font-size:0.7rem;color:#28a745;font-weight:700;">✅ Ganador seleccionado</div>
+          <div style="font-size:1rem;font-weight:700;color:var(--azul);">${eq.n}</div>
+        </div>
+      </div>` : `
+      <div style="background:#fff5f5;border-radius:10px;padding:10px;margin-bottom:10px;font-size:0.78rem;color:var(--rojo);font-weight:600;">
+        ⚠️ Selecciona quién gana este partido
+      </div>`}
+      <select id="o_${p.id}" style="width:100%;padding:10px;border:2px solid ${v?'#28a745':'var(--gris)'};border-radius:10px;font-size:0.85rem;background:white;cursor:pointer;">
+        <option value="">🏆 ¿Quién gana este partido?</option>
+        ${selOpts}
       </select>
-      ${v ? `<div style="margin-top:6px;font-size:0.75rem;color:#28a745;font-weight:600;">✅ Seleccionado: ${equipos.find(e=>e.n===v)?.f||''} ${v}</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -981,33 +991,41 @@ function renderFinalPredicciones(){
   const pred = getPredicciones(tarjetonActual.codigo);
   const pf = pred.final || {};
   const equipos = GRUPOS.flatMap(g => g.equipos);
-  
-  const mkSelect = (id, label, val, emoji) => {
-    const opts = equipos.map(e => 
+
+  const mkCard = (id, label, emoji, val) => {
+    const eq = equipos.find(e => e.n === val);
+    const opts = equipos.map(e =>
       `<option value="${e.n}" ${val===e.n?'selected':''}>${e.f} ${e.n}</option>`
     ).join('');
-    return `<div style="background:white;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
-      <div style="font-size:0.88rem;font-weight:700;color:var(--azul);margin-bottom:8px;">${emoji} ${label}</div>
-      <select id="${id}" style="width:100%;padding:10px;border:2px solid var(--gris);border-radius:8px;font-size:0.85rem;">
+    return `<div style="background:white;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border:1px solid #e8edf5;">
+      <div style="font-size:0.85rem;font-weight:700;color:var(--azul);margin-bottom:10px;">${emoji} ${label}</div>
+      ${val && eq ? `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;background:#f0fff4;border-radius:10px;padding:10px;">
+        <div style="font-size:2rem;">${eq.f}</div>
+        <div>
+          <div style="font-size:0.7rem;color:#28a745;font-weight:700;">✅ Seleccionado</div>
+          <div style="font-size:1rem;font-weight:700;color:var(--azul);">${eq.n}</div>
+        </div>
+      </div>` : ''}
+      <select id="${id}" style="width:100%;padding:10px;border:2px solid ${val?'#28a745':'var(--gris)'};border-radius:10px;font-size:0.85rem;background:white;cursor:pointer;">
         <option value="">-- Selecciona --</option>${opts}
       </select>
-      ${val?`<div style="margin-top:6px;font-size:0.75rem;color:#28a745;font-weight:600;">✅ ${equipos.find(e=>e.n===val)?.f||''} ${val}</div>`:''}
     </div>`;
   };
-  
+
   document.getElementById('final-container').innerHTML = `
-    <div style="background:#fffbea;border:2px solid var(--dorado);border-radius:12px;padding:14px;margin-bottom:14px;">
+    <div style="background:#fffbea;border:2px solid var(--dorado);border-radius:12px;padding:12px 14px;margin-bottom:14px;">
       <div style="font-size:0.82rem;color:#856404;font-weight:600;">
-        🏆 Las predicciones de la Final valen más puntos. ¡Elige bien!
+        🏆 Las predicciones de Final valen más puntos. ¡Elige bien!
       </div>
     </div>
-    ${mkSelect('f_campeon','¿Quién será el Campeón del Mundial?',pf.campeon||'','🥇')}
-    ${mkSelect('f_subcampeon','¿Quién llegará a la Final pero no ganará?',pf.subcampeon||'','🥈')}
-    ${mkSelect('f_tercero','¿Quién quedará en 3er lugar?',pf.tercero||'','🥉')}
-    <div style="background:white;border-radius:12px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
-      <div style="font-size:0.88rem;font-weight:700;color:var(--azul);margin-bottom:8px;">⚽ ¿Quién será el máximo goleador? (+20 pts)</div>
-      <input id="f_goleador" type="text" placeholder="Escribe el nombre del jugador..." value="${pf.goleador||''}" 
-        style="width:100%;padding:10px;border:2px solid var(--gris);border-radius:8px;font-size:0.85rem;box-sizing:border-box;"/>
+    ${mkCard('f_campeon','¿Quién será el Campeón del Mundial?','🥇',pf.campeon||'')}
+    ${mkCard('f_subcampeon','¿Quién llegará a la Final pero no ganará?','🥈',pf.subcampeon||'')}
+    ${mkCard('f_tercero','¿Quién quedará en 3er lugar?','🥉',pf.tercero||'')}
+    <div style="background:white;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+      <div style="font-size:0.85rem;font-weight:700;color:var(--azul);margin-bottom:8px;">⚽ ¿Quién será el máximo goleador? (+20 pts)</div>
+      <input id="f_goleador" type="text" placeholder="Escribe el nombre del jugador..." value="${pf.goleador||''}"
+        style="width:100%;padding:10px;border:2px solid ${pf.goleador?'#28a745':'var(--gris)'};border-radius:10px;font-size:0.85rem;box-sizing:border-box;"/>
       ${pf.goleador?`<div style="margin-top:6px;font-size:0.75rem;color:#28a745;font-weight:600;">✅ ${pf.goleador}</div>`:''}
     </div>
   `;
@@ -1141,6 +1159,14 @@ function switchTab(tab){
   document.querySelectorAll('[id^="tab-"]').forEach(t=>t.classList.remove('active'));
   const el=document.getElementById('tab-'+tab);
   if(el)el.classList.add('active');
+  // Re-renderizar según el tab activo
+  if(tab==='tarjeton') cargarTarjetonView();
+  if(tab==='grupos') renderGruposPredicciones();
+  if(tab==='dieciseisavos') renderPartidosPredicciones('dieciseisavos',PARTIDOS_DIECISEISAVOS,'dieciseisavos-container');
+  if(tab==='octavos') renderPartidosPredicciones('octavos',PARTIDOS_OCTAVOS,'octavos-container');
+  if(tab==='cuartos') renderPartidosPredicciones('cuartos',PARTIDOS_CUARTOS,'cuartos-container');
+  if(tab==='semis') renderPartidosPredicciones('semis',PARTIDOS_SEMIS,'semis-container');
+  if(tab==='final') renderFinalPredicciones();
 }
 
 // ===== TARJETÓN =====
@@ -1949,9 +1975,9 @@ const BANDERAS = {
 const PARTIDOS_CAL = [
   // ===== FASE DE GRUPOS =====
   {fecha:'Jueves 11 Jun',hora:'15:00',local:'México',visita:'Sudáfrica',grupo:'A',sede:'Est. Ciudad de México',tipo:'grupos'},
-  {fecha:'Jueves 11 Jun',hora:'22:00',local:'República de Corea',visita:'Chequia',grupo:'A',sede:'Est. Guadalajara',tipo:'grupos'},
+  {fecha:'Jueves 11 Jun',hora:'22:00',local:'Corea del Sur',visita:'Chequia',grupo:'A',sede:'Est. Guadalajara',tipo:'grupos'},
   {fecha:'Viernes 12 Jun',hora:'15:00',local:'Canadá',visita:'Bosnia y Herzegovina',grupo:'B',sede:'Est. Toronto',tipo:'grupos'},
-  {fecha:'Viernes 12 Jun',hora:'21:00',local:'EE. UU.',visita:'Paraguay',grupo:'D',sede:'Est. Los Ángeles',tipo:'grupos'},
+  {fecha:'Viernes 12 Jun',hora:'21:00',local:'Estados Unidos',visita:'Paraguay',grupo:'D',sede:'Est. Los Ángeles',tipo:'grupos'},
   {fecha:'Sábado 13 Jun',hora:'15:00',local:'Catar',visita:'Suiza',grupo:'B',sede:'Est. San Francisco',tipo:'grupos'},
   {fecha:'Sábado 13 Jun',hora:'18:00',local:'Brasil',visita:'Marruecos',grupo:'C',sede:'Est. Nueva York/NJ',tipo:'grupos'},
   {fecha:'Sábado 13 Jun',hora:'21:00',local:'Haití',visita:'Escocia',grupo:'C',sede:'Est. Boston',tipo:'grupos'},
@@ -1963,7 +1989,7 @@ const PARTIDOS_CAL = [
   {fecha:'Lunes 15 Jun',hora:'12:00',local:'España',visita:'Islas de Cabo Verde',grupo:'H',sede:'Est. Atlanta',tipo:'grupos'},
   {fecha:'Lunes 15 Jun',hora:'15:00',local:'Bélgica',visita:'Egipto',grupo:'G',sede:'Est. Seattle',tipo:'grupos'},
   {fecha:'Lunes 15 Jun',hora:'18:00',local:'Arabia Saudí',visita:'Uruguay',grupo:'H',sede:'Est. Miami',tipo:'grupos'},
-  {fecha:'Lunes 15 Jun',hora:'21:00',local:'RI de Irán',visita:'Nueva Zelanda',grupo:'G',sede:'Est. Los Ángeles',tipo:'grupos'},
+  {fecha:'Lunes 15 Jun',hora:'21:00',local:'Irán',visita:'Nueva Zelanda',grupo:'G',sede:'Est. Los Ángeles',tipo:'grupos'},
   {fecha:'Martes 16 Jun',hora:'15:00',local:'Francia',visita:'Senegal',grupo:'I',sede:'Est. Nueva York/NJ',tipo:'grupos'},
   {fecha:'Martes 16 Jun',hora:'18:00',local:'Irak',visita:'Noruega',grupo:'I',sede:'Est. Boston',tipo:'grupos'},
   {fecha:'Martes 16 Jun',hora:'21:00',local:'Argentina',visita:'Argelia',grupo:'J',sede:'Est. Kansas City',tipo:'grupos'},
@@ -1972,11 +1998,11 @@ const PARTIDOS_CAL = [
   {fecha:'Miércoles 17 Jun',hora:'16:00',local:'Inglaterra',visita:'Croacia',grupo:'L',sede:'Est. Dallas',tipo:'grupos'},
   {fecha:'Miércoles 17 Jun',hora:'19:00',local:'Ghana',visita:'Panamá',grupo:'L',sede:'Est. Toronto',tipo:'grupos'},
   {fecha:'Miércoles 17 Jun',hora:'22:00',local:'Uzbekistán',visita:'Colombia',grupo:'K',sede:'Est. Ciudad de México',tipo:'grupos'},
-  {fecha:'Jueves 18 Jun',hora:'12:00',local:'Chequia',visita:'Sudáfrica',grupo:'A',sede:'Est. Atlanta',tipo:'grupos'},
+  {fecha:'Jueves 18 Jun',hora:'12:00',local:'Rep. Checa',visita:'Sudáfrica',grupo:'A',sede:'Est. Atlanta',tipo:'grupos'},
   {fecha:'Jueves 18 Jun',hora:'15:00',local:'Suiza',visita:'Bosnia y Herzegovina',grupo:'B',sede:'Est. Los Ángeles',tipo:'grupos'},
   {fecha:'Jueves 18 Jun',hora:'18:00',local:'Canadá',visita:'Catar',grupo:'B',sede:'Est. Vancouver',tipo:'grupos'},
   {fecha:'Jueves 18 Jun',hora:'21:00',local:'México',visita:'República de Corea',grupo:'A',sede:'Est. Guadalajara',tipo:'grupos'},
-  {fecha:'Viernes 19 Jun',hora:'15:00',local:'EE. UU.',visita:'Australia',grupo:'D',sede:'Est. Seattle',tipo:'grupos'},
+  {fecha:'Viernes 19 Jun',hora:'15:00',local:'Estados Unidos',visita:'Australia',grupo:'D',sede:'Est. Seattle',tipo:'grupos'},
   {fecha:'Viernes 19 Jun',hora:'18:00',local:'Escocia',visita:'Marruecos',grupo:'C',sede:'Est. Boston',tipo:'grupos'},
   {fecha:'Viernes 19 Jun',hora:'21:00',local:'Brasil',visita:'Haití',grupo:'C',sede:'Est. Filadelfia',tipo:'grupos'},
   {fecha:'Viernes 19 Jun',hora:'00:00',local:'Turquía',visita:'Paraguay',grupo:'D',sede:'Est. San Francisco',tipo:'grupos'},
@@ -1997,12 +2023,12 @@ const PARTIDOS_CAL = [
   {fecha:'Martes 23 Jun',hora:'19:00',local:'Panamá',visita:'Croacia',grupo:'L',sede:'Est. Toronto',tipo:'grupos'},
   {fecha:'Martes 23 Jun',hora:'22:00',local:'Colombia',visita:'RD Congo',grupo:'K',sede:'Est. Guadalajara',tipo:'grupos'},
   {fecha:'Miércoles 24 Jun',hora:'15:00',local:'Suiza',visita:'Canadá',grupo:'B',sede:'Est. Vancouver',tipo:'grupos'},
-  {fecha:'Miércoles 24 Jun',hora:'15:00',local:'Bosnia y Herzegovina',visita:'Catar',grupo:'B',sede:'Est. Seattle',tipo:'grupos'},
+  {fecha:'Miércoles 24 Jun',hora:'15:00',local:'Bosnia-Herz.',visita:'Catar',grupo:'B',sede:'Est. Seattle',tipo:'grupos'},
   {fecha:'Miércoles 24 Jun',hora:'18:00',local:'Escocia',visita:'Brasil',grupo:'C',sede:'Est. Miami',tipo:'grupos'},
   {fecha:'Miércoles 24 Jun',hora:'18:00',local:'Marruecos',visita:'Haití',grupo:'C',sede:'Est. Atlanta',tipo:'grupos'},
-  {fecha:'Miércoles 24 Jun',hora:'21:00',local:'Chequia',visita:'México',grupo:'A',sede:'Est. Ciudad de México',tipo:'grupos'},
+  {fecha:'Miércoles 24 Jun',hora:'21:00',local:'Rep. Checa',visita:'México',grupo:'A',sede:'Est. Ciudad de México',tipo:'grupos'},
   {fecha:'Miércoles 24 Jun',hora:'21:00',local:'Sudáfrica',visita:'República de Corea',grupo:'A',sede:'Est. Monterrey',tipo:'grupos'},
-  {fecha:'Jueves 25 Jun',hora:'16:00',local:'Curazao',visita:'Costa de Marfil',grupo:'E',sede:'Est. Filadelfia',tipo:'grupos'},
+  {fecha:'Jueves 25 Jun',hora:'16:00',local:'Curaçao',visita:'Costa de Marfil',grupo:'E',sede:'Est. Filadelfia',tipo:'grupos'},
   {fecha:'Jueves 25 Jun',hora:'16:00',local:'Ecuador',visita:'Alemania',grupo:'E',sede:'Est. Nueva York/NJ',tipo:'grupos'},
   {fecha:'Jueves 25 Jun',hora:'19:00',local:'Japón',visita:'Suecia',grupo:'F',sede:'Est. Dallas',tipo:'grupos'},
   {fecha:'Jueves 25 Jun',hora:'19:00',local:'Túnez',visita:'Países Bajos',grupo:'F',sede:'Est. Kansas City',tipo:'grupos'},
@@ -2010,14 +2036,14 @@ const PARTIDOS_CAL = [
   {fecha:'Jueves 25 Jun',hora:'22:00',local:'Paraguay',visita:'Australia',grupo:'D',sede:'Est. San Francisco',tipo:'grupos'},
   {fecha:'Viernes 26 Jun',hora:'15:00',local:'Noruega',visita:'Francia',grupo:'I',sede:'Est. Boston',tipo:'grupos'},
   {fecha:'Viernes 26 Jun',hora:'15:00',local:'Senegal',visita:'Irak',grupo:'I',sede:'Est. Toronto',tipo:'grupos'},
-  {fecha:'Viernes 26 Jun',hora:'20:00',local:'Islas de Cabo Verde',visita:'Arabia Saudí',grupo:'H',sede:'Est. Houston',tipo:'grupos'},
+  {fecha:'Viernes 26 Jun',hora:'20:00',local:'Cabo Verde',visita:'Arabia Saudí',grupo:'H',sede:'Est. Houston',tipo:'grupos'},
   {fecha:'Viernes 26 Jun',hora:'20:00',local:'Uruguay',visita:'España',grupo:'H',sede:'Est. Guadalajara',tipo:'grupos'},
   {fecha:'Viernes 26 Jun',hora:'23:00',local:'Egipto',visita:'RI de Irán',grupo:'G',sede:'Est. Seattle',tipo:'grupos'},
   {fecha:'Viernes 26 Jun',hora:'23:00',local:'Nueva Zelanda',visita:'Bélgica',grupo:'G',sede:'Est. Vancouver',tipo:'grupos'},
   {fecha:'Sábado 27 Jun',hora:'17:00',local:'Panamá',visita:'Inglaterra',grupo:'L',sede:'Est. Nueva York/NJ',tipo:'grupos'},
   {fecha:'Sábado 27 Jun',hora:'17:00',local:'Croacia',visita:'Ghana',grupo:'L',sede:'Est. Filadelfia',tipo:'grupos'},
   {fecha:'Sábado 27 Jun',hora:'19:30',local:'Colombia',visita:'Portugal',grupo:'K',sede:'Est. Miami',tipo:'grupos'},
-  {fecha:'Sábado 27 Jun',hora:'19:30',local:'RD Congo',visita:'Uzbekistán',grupo:'K',sede:'Est. Atlanta',tipo:'grupos'},
+  {fecha:'Sábado 27 Jun',hora:'19:30',local:'R.D. Congo',visita:'Uzbekistán',grupo:'K',sede:'Est. Atlanta',tipo:'grupos'},
   {fecha:'Sábado 27 Jun',hora:'22:00',local:'Argelia',visita:'Austria',grupo:'J',sede:'Est. Kansas City',tipo:'grupos'},
   {fecha:'Sábado 27 Jun',hora:'22:00',local:'Jordania',visita:'Argentina',grupo:'J',sede:'Est. Dallas',tipo:'grupos'},
   // ===== DIECISEISAVOS =====
