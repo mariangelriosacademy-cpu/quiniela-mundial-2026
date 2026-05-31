@@ -1393,23 +1393,45 @@ function eliminarTarjeton(cedula,codigo){
   const nombre=p.nombre;
   const soloUnTarjeton=p.tarjetones.length===1;
   const msg=soloUnTarjeton
-    ? `¿Eliminar completamente a ${nombre} (${cedula})? Esto borrará su registro y predicciones.`
+    ? `¿Eliminar completamente a ${nombre}? Esto borrará su registro y predicciones.`
     : `¿Eliminar el tarjetón ${codigo} de ${nombre}?`;
-  if(!confirm(msg))return;
-  // Borrar predicciones del tarjetón
-  localStorage.removeItem('q26_pred_'+codigo);
-  if(soloUnTarjeton){
-    // Eliminar participante completo
-    delete participantes[cedula];
-  } else {
-    // Solo eliminar ese tarjetón
-    p.tarjetones=p.tarjetones.filter(t=>t.codigo!==codigo);
-  }
-  setParticipantes(participantes);
-  renderParticipantesAdmin();
-  actualizarRankingPublico();
-  renderStatsAdmin();
-  mostrarToast('🗑️ '+(soloUnTarjeton?`${nombre} eliminado`:`Tarjetón ${codigo} eliminado`));
+  
+  // Modal de confirmación propio (sin confirm() que algunos navegadores bloquean)
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+  modal.innerHTML = `<div style="background:white;border-radius:16px;padding:24px;max-width:340px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    <div style="font-size:2rem;margin-bottom:12px;">🗑️</div>
+    <div style="font-size:1rem;font-weight:700;color:#1A1A2E;margin-bottom:8px;">Confirmar eliminación</div>
+    <div style="font-size:0.85rem;color:#555;margin-bottom:20px;">${msg}</div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border:2px solid #ddd;border-radius:10px;background:white;font-size:0.9rem;cursor:pointer;">Cancelar</button>
+      <button id="btn-confirmar-eliminar" style="flex:1;padding:10px;border:none;border-radius:10px;background:#dc3545;color:white;font-size:0.9rem;font-weight:700;cursor:pointer;">Eliminar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  
+  document.getElementById('btn-confirmar-eliminar').onclick = () => {
+    modal.remove();
+    localStorage.removeItem('q26_pred_'+codigo);
+    if(soloUnTarjeton){
+      delete participantes[cedula];
+    } else {
+      p.tarjetones=p.tarjetones.filter(t=>t.codigo!==codigo);
+    }
+    setParticipantes(participantes);
+    // Eliminar de Supabase también
+    if(window._supa){
+      if(soloUnTarjeton){
+        window._supa.from('participantes').delete().eq('cedula',cedula).catch(e=>console.warn(e));
+      } else {
+        window._supa.from('participantes').upsert({cedula,nombre:p.nombre,tel:p.tel,fecha_reg:p.fechaReg||'',tarjetones:p.tarjetones},{onConflict:'cedula'}).catch(e=>console.warn(e));
+      }
+    }
+    renderParticipantesAdmin();
+    actualizarRankingPublico();
+    renderStatsAdmin();
+    mostrarToast('🗑️ '+(soloUnTarjeton?`${nombre} eliminado`:`Tarjetón ${codigo} eliminado`));
+  };
 }
 function verPredsAdmin(cedula,codigo){
   const pred=getPredicciones(codigo);
