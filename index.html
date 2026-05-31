@@ -781,16 +781,19 @@ function abrirPredicciones(cedula,codigo){
     document.getElementById('pred-nombre-display').textContent=p.nombre;
     document.getElementById('pred-codigo-display').textContent='Tarjetón: '+codigo;
     grupoActualIdx = 0;
-    renderGruposPredicciones();
-  renderPartidosPredicciones('dieciseisavos',PARTIDOS_DIECISEISAVOS,'dieciseisavos-container');
-  renderPartidosPredicciones('octavos',PARTIDOS_OCTAVOS,'octavos-container');
-  renderPartidosPredicciones('cuartos',PARTIDOS_CUARTOS,'cuartos-container');
-  renderPartidosPredicciones('semis',PARTIDOS_SEMIS,'semis-container');
-  renderFinalPredicciones();
-  cargarTarjetonView();
-  switchTab('grupos');
+  // Primero navegar a la página, luego renderizar
   irA('predicciones');
-  actualizarProgreso();
+  switchTab('grupos');
+  setTimeout(()=>{
+    renderGruposPredicciones();
+    renderPartidosPredicciones('dieciseisavos',PARTIDOS_DIECISEISAVOS,'dieciseisavos-container');
+    renderPartidosPredicciones('octavos',PARTIDOS_OCTAVOS,'octavos-container');
+    renderPartidosPredicciones('cuartos',PARTIDOS_CUARTOS,'cuartos-container');
+    renderPartidosPredicciones('semis',PARTIDOS_SEMIS,'semis-container');
+    renderFinalPredicciones();
+    cargarTarjetonView();
+    actualizarProgreso();
+  }, 50);
   } catch(e){ console.error('Error abrirPredicciones:',e); alert('Error al abrir predicciones: '+e.message); }
 }
 // Índice del grupo actual en la paginación
