@@ -2615,8 +2615,8 @@ function mostrarLockPartido(localNombre, visitaNombre){
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', function() {
-  // Cargar UI inmediatamente desde localStorage
-  actualizarHeroPrecio();
+  // NO cargar precio desde localStorage al inicio — esperar Supabase para evitar parpadeo
+  // Solo mostrar ranking público inmediatamente
   actualizarRankingPublico();
   renderCalendario();
   iniciarContador();
@@ -2624,7 +2624,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Sincronizar desde Supabase al inicio
   setTimeout(async()=>{
     await sincronizarDesdeSupabase();
-    actualizarHeroPrecio();
+    actualizarHeroPrecio(); // Mostrar precio correcto desde Supabase
     actualizarRankingPublico();
   }, 1500);
   // Iniciar actualización automática de resultados via API
