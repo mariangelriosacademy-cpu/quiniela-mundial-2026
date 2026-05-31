@@ -1110,21 +1110,64 @@ function guardarFase(fase){
   }
 }
 function actualizarProgreso(){
-  if(!tarjetonActual)return;
-  const pred=getPredicciones(tarjetonActual.codigo);
-  const total = 16+8+4+4; // dieciseisavos + octavos + cuartos + semis + final
-  let c=0;
-  // Solo contar si hay predicciones realmente guardadas
+  if(!tarjetonActual) return;
+  const pred = getPredicciones(tarjetonActual.codigo);
+
+  // Total de predicciones posibles:
+  // 72 partidos de grupos (marcador local + visita = 2 valores cada uno)
+  // 16 dieciseisavos + 8 octavos + 4 cuartos + 4 semis = 32 ganadores
+  // 3 de final (campeon, subcampeon, tercero) + 1 goleador = 4
+  // Total = 72 + 32 + 4 = 108... pero simplificamos por partidos completados
+
+  let completados = 0;
+  let total = 0;
+
+  // Grupos: contar partidos con al menos un marcador guardado
   if(pred.grupos){
-    c+=Object.values(pred.grupos).filter(g=>g.c1&&g.c2).length*2;
+    GRUPOS.forEach(g => {
+      const pG = pred.grupos[g.id] || {};
+      const partidos = getPartidosGrupo(g);
+      total += partidos.length;
+      partidos.forEach(pa => {
+        const ml = pG.marcadores?.[pa.id+'_l'];
+        const mv = pG.marcadores?.[pa.id+'_v'];
+        if(ml !== undefined && ml !== '' && mv !== undefined && mv !== '') completados++;
+      });
+    });
+  } else {
+    total += 72; // 72 partidos de grupos
   }
-  if(pred.octavos)c+=Object.values(pred.octavos).filter(v=>v&&v!=='').length;
-  if(pred.cuartos)c+=Object.values(pred.cuartos).filter(v=>v&&v!=='').length;
-  if(pred.semis)c+=Object.values(pred.semis).filter(v=>v&&v!=='').length;
-  if(pred.final){['campeon','subcampeon','tercero','goleador'].forEach(k=>{if(pred.final[k]&&pred.final[k]!=='')c++;});}
-  const pct=Math.round(Math.min(c/total*100,100));
-  document.getElementById('progreso-fill').style.width=pct+'%';
-  document.getElementById('progreso-texto').textContent=pct+'% de predicciones completadas';
+
+  // Dieciseisavos
+  total += PARTIDOS_DIECISEISAVOS.length;
+  if(pred.dieciseisavos) completados += Object.values(pred.dieciseisavos).filter(v=>v&&v!=='').length;
+
+  // Octavos
+  total += PARTIDOS_OCTAVOS.length;
+  if(pred.octavos) completados += Object.values(pred.octavos).filter(v=>v&&v!=='').length;
+
+  // Cuartos
+  total += PARTIDOS_CUARTOS.length;
+  if(pred.cuartos) completados += Object.values(pred.cuartos).filter(v=>v&&v!=='').length;
+
+  // Semis
+  total += PARTIDOS_SEMIS.length;
+  if(pred.semis) completados += Object.values(pred.semis).filter(v=>v&&v!=='').length;
+
+  // Final
+  total += 4; // campeon, subcampeon, tercero, goleador
+  if(pred.final){
+    if(pred.final.campeon) completados++;
+    if(pred.final.subcampeon) completados++;
+    if(pred.final.tercero) completados++;
+    if(pred.final.goleador) completados++;
+  }
+
+  const pct = total > 0 ? Math.round((completados/total)*100) : 0;
+  const fillEl = document.getElementById('progreso-fill');
+  const textEl = document.getElementById('progreso-texto');
+  if(fillEl) fillEl.style.width = pct + '%';
+  if(textEl) textEl.textContent = pct + '% completado (' + completados + '/' + total + ')';
 }
 function switchTab(tab){
   const tabs=['grupos','dieciseisavos','octavos','cuartos','semis','final','tarjeton'];
