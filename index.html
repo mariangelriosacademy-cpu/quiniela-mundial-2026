@@ -343,9 +343,7 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--fondo); co
     </div>
     <div id="tab-grupos" class="tab-content active">
       <!-- Aviso importante -->
-      <div style="background:#fde8e8;border:1.5px solid var(--rojo);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.82rem;color:#721c24;">
-        🔴 <b>Importante:</b> Debes elegir el 1° y 2° clasificado de cada grupo. Sin eso no puedes guardar.
-      </div>
+
       <!-- Navegación por jornadas -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;">
         <button id="btn-grupo-prev" onclick="cambiarJornada(-1)" style="background:var(--azul);color:white;border:none;padding:8px 14px;border-radius:20px;font-size:0.85rem;font-weight:700;cursor:pointer;opacity:0.4;flex-shrink:0;" disabled>← Anterior</button>
@@ -866,7 +864,7 @@ function renderGruposPredicciones(){
   if(prevBtn){ prevBtn.disabled = jornadaActualIdx===0; prevBtn.style.opacity = jornadaActualIdx===0?'0.4':'1'; }
   if(nextBtn){ nextBtn.disabled = jornadaActualIdx===JORNADAS_CAL.length-1; nextBtn.style.opacity = jornadaActualIdx===JORNADAS_CAL.length-1?'0.4':'1'; }
 
-  // Grupos únicos en esta jornada (para mostrar clasificados al final)
+  // Grupos únicos en esta jornada
   const gruposEnJornada = [...new Set(jornada.partidos.map(p=>p.g))];
 
   // Generar tarjetas de partido
@@ -938,40 +936,8 @@ function renderGruposPredicciones(){
     </div>`;
   }).join('');
 
-  // Clasificados de los grupos presentes en esta jornada
-  const clasificadosHTML = gruposEnJornada.map(gId => {
-    const g = GRUPOS.find(gr=>gr.id===gId);
-    if(!g) return '';
-    const pG = (pred.grupos||{})[g.id]||{};
-    const c1Val = pG.c1||'';
-    const c2Val = pG.c2||'';
-    const primerPartidoGrupo = getPartidosGrupo(g)[0];
-    const bloqClasif = (primerPartidoGrupo && partidoBloqueado(primerPartidoGrupo.local.n, primerPartidoGrupo.visita.n)) || (c1Val!==''&&c2Val!=='');
-    const opts1 = g.equipos.map(e=>`<option value="${e.n}" ${c1Val===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
-    const opts2 = g.equipos.map(e=>`<option value="${e.n}" ${c2Val===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
 
-    return `<div style="background:${bloqClasif?'#f0fff4':'#fff5f5'};border:2px solid ${bloqClasif?'#28a745':'var(--rojo)'};border-radius:12px;padding:12px 14px;margin-bottom:10px;">
-      <div style="font-size:0.82rem;font-weight:700;color:${bloqClasif?'#155724':'var(--rojo)'};margin-bottom:10px;">
-        ${bloqClasif?'✅':'⚠️'} ¿Quiénes clasifican del <b>Grupo ${g.id}</b>?
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div>
-          <label style="font-size:0.7rem;color:#888;display:block;margin-bottom:3px;">🥇 1° Clasificado</label>
-          <select id="g_${g.id}_c1" style="width:100%;padding:8px;border:2px solid ${bloqClasif?'#28a745':'var(--rojo)'};border-radius:8px;font-size:0.8rem;" ${bloqClasif?'disabled':''}>
-            <option value="">-- Elige --</option>${opts1}
-          </select>
-        </div>
-        <div>
-          <label style="font-size:0.7rem;color:#888;display:block;margin-bottom:3px;">🥈 2° Clasificado</label>
-          <select id="g_${g.id}_c2" style="width:100%;padding:8px;border:2px solid ${bloqClasif?'#28a745':'var(--rojo)'};border-radius:8px;font-size:0.8rem;" ${bloqClasif?'disabled':''}>
-            <option value="">-- Elige --</option>${opts2}
-          </select>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
-  document.getElementById('grupos-container').innerHTML = tarjetas + referenciaHTML + clasificadosHTML;
+  document.getElementById('grupos-container').innerHTML = tarjetas + referenciaHTML;
   } catch(e){
     console.error('Error renderGrupos:', e);
     document.getElementById('grupos-container').innerHTML = '<div class="alerta alerta-warn">Error: '+e.message+'</div>';
@@ -1070,21 +1036,7 @@ function guardarFase(fase){
     const jornada = JORNADAS_CAL[jornadaActualIdx];
     if(!pred.grupos) pred.grupos = {};
 
-    // Validar clasificados de grupos en esta jornada
-    const gruposEnJornada = [...new Set(jornada.partidos.map(p=>p.g))];
-    let gruposSinClasificados = [];
-    gruposEnJornada.forEach(gId => {
-      const c1 = document.getElementById(`g_${gId}_c1`)?.value || '';
-      const c2 = document.getElementById(`g_${gId}_c2`)?.value || '';
-      const pGGuardado = pred.grupos[gId]||{};
-      const c1Final = c1 || pGGuardado.c1 || '';
-      const c2Final = c2 || pGGuardado.c2 || '';
-      if(!c1Final || !c2Final) gruposSinClasificados.push('Grupo '+gId);
-    });
-    if(gruposSinClasificados.length > 0){
-      mostrarAlerta('alerta-pred', `⚠️ Elige los clasificados de: ${gruposSinClasificados.join(', ')}`, 'warn');
-      return;
-    }
+
 
     // Guardar marcadores de cada partido de la jornada
     jornada.partidos.forEach(p => {
@@ -1101,14 +1053,7 @@ function guardarFase(fase){
       pred.grupos[g.id].marcadores[pa.id+'_v'] = vv;
     });
 
-    // Guardar clasificados
-    gruposEnJornada.forEach(gId => {
-      const c1 = document.getElementById(`g_${gId}_c1`)?.value || pred.grupos[gId]?.c1 || '';
-      const c2 = document.getElementById(`g_${gId}_c2`)?.value || pred.grupos[gId]?.c2 || '';
-      if(!pred.grupos[gId]) pred.grupos[gId] = {c1:'',c2:'',marcadores:{}};
-      pred.grupos[gId].c1 = c1;
-      pred.grupos[gId].c2 = c2;
-    });
+
 
     setPredicciones(tarjetonActual.codigo, pred);
     mostrarToast(`✅ ${jornada.titulo} guardada`);
@@ -1167,7 +1112,7 @@ function guardarFase(fase){
 function actualizarProgreso(){
   if(!tarjetonActual)return;
   const pred=getPredicciones(tarjetonActual.codigo);
-  const total = 12*2 + 16+8+4+4; // clasificados + eliminatorias + final
+  const total = 16+8+4+4; // dieciseisavos + octavos + cuartos + semis + final
   let c=0;
   // Solo contar si hay predicciones realmente guardadas
   if(pred.grupos){
@@ -1879,7 +1824,7 @@ function generarHTMLTarjetonBlanco(){
       </div>
 
       <div style="padding:12px 16px;">
-        <div style="background:#003087;color:white;padding:8px 14px;border-radius:8px;font-weight:700;font-size:0.9rem;margin-bottom:10px">⚽ FASE DE GRUPOS — Predice el marcador y los clasificados</div>
+        <div style="background:#003087;color:white;padding:8px 14px;border-radius:8px;font-weight:700;font-size:0.9rem;margin-bottom:10px">⚽ FASE DE GRUPOS — Predice el marcador predicho</div>
         ${gruposHTML}
         ${mkFase('🏟️ OCTAVOS DE FINAL', PARTIDOS_OCTAVOS, '#C8102E')}
         ${mkFase('⚔️ CUARTOS DE FINAL', PARTIDOS_CUARTOS, '#003087')}
