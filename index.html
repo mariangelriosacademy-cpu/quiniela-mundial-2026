@@ -443,14 +443,16 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--fondo); co
       <div id="referidos-container"></div>
     </div>
     <div id="admin-resultados" class="admin-panel">
-      <div class="tabs">
+      <div class="tabs" style="flex-wrap:wrap;gap:4px;">
         <button class="tab active" onclick="switchResTab('r-grupos',event)">Grupos</button>
+        <button class="tab" onclick="switchResTab('r-dieciseisavos',event)">Dieciseisavos</button>
         <button class="tab" onclick="switchResTab('r-octavos',event)">Octavos</button>
         <button class="tab" onclick="switchResTab('r-cuartos',event)">Cuartos</button>
         <button class="tab" onclick="switchResTab('r-semis',event)">Semis</button>
         <button class="tab" onclick="switchResTab('r-final',event)">Final</button>
       </div>
       <div id="r-grupos" class="tab-content active"><div id="res-grupos-container"></div></div>
+      <div id="r-dieciseisavos" class="tab-content"><div id="res-dieciseisavos-container"></div></div>
       <div id="r-octavos" class="tab-content"><div id="res-octavos-container"></div></div>
       <div id="r-cuartos" class="tab-content"><div id="res-cuartos-container"></div></div>
       <div id="r-semis" class="tab-content"><div id="res-semis-container"></div></div>
@@ -1667,29 +1669,58 @@ function otorgarTarjetonGratis(cedula){
 
 // ===== ADMIN RESULTADOS =====
 function renderResultadosAdmin(){
-  const res=getResultados();
-  const cont=document.getElementById('res-grupos-container');
-  cont.innerHTML=GRUPOS.map(g=>{
-    const r=(res.grupos||{})[g.id]||{};
-    const opts=g.equipos.map(e=>`<option value="${e.n}" ${r.c1===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
-    const opts2=g.equipos.map(e=>`<option value="${e.n}" ${r.c2===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
-    return `<div class="resultado-grupo"><div class="resultado-titulo">${g.nombre}</div>
-      <label style="font-size:0.82rem">1° Clasificado:</label><select id="res_g_${g.id}_c1" class="select-ganador"><option value="">—</option>${opts}</select>
-      <label style="font-size:0.82rem;margin-top:8px;display:block">2° Clasificado:</label><select id="res_g_${g.id}_c2" class="select-ganador"><option value="">—</option>${opts2}</select>
-    </div>`;
-  }).join('');
-  [['octavos','res-octavos-container',PARTIDOS_OCTAVOS],['cuartos','res-cuartos-container',PARTIDOS_CUARTOS],['semis','res-semis-container',PARTIDOS_SEMIS]].forEach(([fase,cid,partidos])=>{
-    document.getElementById(cid).innerHTML=partidos.map(p=>{
+  const res = getResultados();
+  const todosEquipos = GRUPOS.flatMap(g=>g.equipos).map(e=>e.n);
+  const mkOpts = (val) => todosEquipos.map(n=>'<option value="'+n+'"'+(val===n?' selected':'')+'>'+n+'</option>').join('');
+
+  // GRUPOS: inputs de marcador por partido
+  const contGrupos = document.getElementById('res-grupos-container');
+  if(contGrupos){
+    contGrupos.innerHTML = GRUPOS.map(g=>{
+      const rG = (res.grupos||{})[g.id]||{};
+      const filas = getPartidosGrupo(g).map(pa=>{
+        const rl = (rG.marcadores||{})[pa.id+'_l']||'';
+        const rv = (rG.marcadores||{})[pa.id+'_v']||'';
+        return '<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:8px;background:#f8f9fa;border-radius:8px;margin-bottom:6px;">'+
+          '<div style="text-align:right;font-size:0.85rem;font-weight:600;">'+pa.local.f+' '+pa.local.n+'</div>'+
+          '<div style="display:flex;align-items:center;gap:4px;">'+
+            '<input type="number" min="0" max="20" id="res_g_'+g.id+'_'+pa.id+'_l" value="'+rl+'" placeholder="-" style="width:44px;height:40px;text-align:center;font-size:1.1rem;font-weight:700;border-radius:6px;border:2px solid #ddd;"/>'+
+            '<span style="font-weight:700;color:#999;">:</span>'+
+            '<input type="number" min="0" max="20" id="res_g_'+g.id+'_'+pa.id+'_v" value="'+rv+'" placeholder="-" style="width:44px;height:40px;text-align:center;font-size:1.1rem;font-weight:700;border-radius:6px;border:2px solid #ddd;"/>'+
+          '</div>'+
+          '<div style="font-size:0.85rem;font-weight:600;">'+pa.visita.f+' '+pa.visita.n+'</div>'+
+        '</div>';
+      }).join('');
+      return '<div style="background:white;border-radius:12px;padding:14px;margin-bottom:12px;border-left:4px solid var(--azul);">'+
+        '<div style="font-size:0.9rem;font-weight:700;color:var(--azul);margin-bottom:10px;">⚽ '+g.nombre+'</div>'+
+        filas+'</div>';
+    }).join('');
+  }
+
+  // ELIMINATORIAS: ganador de cada partido
+  [
+    ['dieciseisavos','res-dieciseisavos-container',PARTIDOS_DIECISEISAVOS],
+    ['octavos','res-octavos-container',PARTIDOS_OCTAVOS],
+    ['cuartos','res-cuartos-container',PARTIDOS_CUARTOS],
+    ['semis','res-semis-container',PARTIDOS_SEMIS]
+  ].forEach(([fase,cid,partidos])=>{
+    const cont = document.getElementById(cid);
+    if(!cont) return;
+    cont.innerHTML = partidos.map(p=>{
       const val=(res[fase]||{})[p.id]||'';
-      const opts=TODOS_EQUIPOS.map(e=>`<option value="${e.n}" ${val===e.n?'selected':''}>${e.f} ${e.n}</option>`).join('');
-      return `<div class="resultado-grupo"><div class="resultado-titulo">${p.lbl}</div><select id="res_${fase}_${p.id}" class="select-ganador"><option value="">— Seleccionar ganador —</option>${opts}</select></div>`;
+      return '<div style="background:white;border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--rojo);">'+
+        '<div style="font-size:0.78rem;color:#888;margin-bottom:6px;font-weight:600;">'+p.lbl+'</div>'+
+        '<div style="font-size:0.82rem;font-weight:700;color:var(--azul);margin-bottom:6px;">🏆 ¿Quién ganó?</div>'+
+        '<select id="res_'+fase+'_'+p.id+'" style="width:100%;padding:10px;border:2px solid '+(val?'#28a745':'var(--gris)')+';border-radius:8px;font-size:0.85rem;">'+
+        '<option value="">— Seleccionar ganador —</option>'+mkOpts(val)+'</select></div>';
     }).join('');
   });
-  const opts=TODOS_EQUIPOS.map(e=>`<option value="${e.n}">${e.f} ${e.n}</option>`).join('');
+
+  // FINAL
   const rf=res.final||{};
   ['res-campeon','res-subcampeon','res-tercero'].forEach((id,i)=>{
     const el=document.getElementById(id);
-    if(el){el.innerHTML=`<option value="">—</option>${opts}`;el.value=[rf.campeon,rf.subcampeon,rf.tercero][i]||'';}
+    if(el){el.innerHTML='<option value="">—</option>'+mkOpts([rf.campeon,rf.subcampeon,rf.tercero][i]||'');el.value=[rf.campeon,rf.subcampeon,rf.tercero][i]||'';}
   });
   const rg=document.getElementById('res-goleador');
   if(rg)rg.value=rf.goleador||'';
@@ -1701,29 +1732,64 @@ function switchResTab(tab,evt){
 }
 function calcularPuntos(){
   const res={};
+
+  // Leer marcadores de grupos
   res.grupos={};
-  GRUPOS.forEach(g=>{res.grupos[g.id]={c1:document.getElementById(`res_g_${g.id}_c1`)?.value||'',c2:document.getElementById(`res_g_${g.id}_c2`)?.value||''};});
-  ['octavos','cuartos','semis'].forEach(fase=>{
-    const partidos=fase==='octavos'?PARTIDOS_OCTAVOS:fase==='cuartos'?PARTIDOS_CUARTOS:PARTIDOS_SEMIS;
-    res[fase]={};partidos.forEach(p=>{res[fase][p.id]=document.getElementById(`res_${fase}_${p.id}`)?.value||'';});
+  GRUPOS.forEach(g=>{
+    const marcadores={};
+    getPartidosGrupo(g).forEach(pa=>{
+      marcadores[pa.id+'_l']=document.getElementById('res_g_'+g.id+'_'+pa.id+'_l')?.value||'';
+      marcadores[pa.id+'_v']=document.getElementById('res_g_'+g.id+'_'+pa.id+'_v')?.value||'';
+    });
+    res.grupos[g.id]={marcadores};
   });
+
+  // Leer ganadores de eliminatorias
+  ['dieciseisavos','octavos','cuartos','semis'].forEach(fase=>{
+    const partidos=fase==='dieciseisavos'?PARTIDOS_DIECISEISAVOS:fase==='octavos'?PARTIDOS_OCTAVOS:fase==='cuartos'?PARTIDOS_CUARTOS:PARTIDOS_SEMIS;
+    res[fase]={};partidos.forEach(p=>{res[fase][p.id]=document.getElementById('res_'+fase+'_'+p.id)?.value||'';});
+  });
+
   res.final={campeon:document.getElementById('res-campeon')?.value||'',subcampeon:document.getElementById('res-subcampeon')?.value||'',tercero:document.getElementById('res-tercero')?.value||'',goleador:document.getElementById('res-goleador')?.value||''};
   setResultados(res);
+
   const participantes=getParticipantes();
   let total=0;
   Object.keys(participantes).forEach(cedula=>{
     (participantes[cedula].tarjetones||[]).filter(t=>t.estado==='verificado').forEach(t=>{
       const pred=getPredicciones(t.codigo);let pts=0;
-      if(res.grupos&&pred.grupos){GRUPOS.forEach(g=>{const r=res.grupos[g.id]||{},p=pred.grupos[g.id]||{};if(r.c1&&p.c1===r.c1)pts+=10;if(r.c2&&p.c2===r.c2)pts+=10;else if(r.c1&&(p.c1===r.c2||p.c2===r.c1))pts+=6;});}
+
+      // 🎯 GRUPOS: Marcador exacto=10, Ganador correcto=6, Empate correcto=4
+      if(res.grupos&&pred.grupos){
+        GRUPOS.forEach(g=>{
+          const rG=res.grupos[g.id]||{}, pG=pred.grupos[g.id]||{};
+          getPartidosGrupo(g).forEach(pa=>{
+            const rl=rG.marcadores?.[pa.id+'_l'], rv=rG.marcadores?.[pa.id+'_v'];
+            const pl=pG.marcadores?.[pa.id+'_l'], pv=pG.marcadores?.[pa.id+'_v'];
+            if(!rl||!rv||pl===undefined||pv===undefined||rl===''||rv==='') return;
+            const rli=parseInt(rl),rvi=parseInt(rv),pli=parseInt(pl||''),pvi=parseInt(pv||'');
+            if(isNaN(rli)||isNaN(rvi)||isNaN(pli)||isNaN(pvi)) return;
+            if(pli===rli&&pvi===rvi) pts+=10;
+            else if(rli===rvi&&pli===pvi) pts+=4;
+            else if((rli>rvi&&pli>pvi)||(rli<rvi&&pli<pvi)) pts+=6;
+          });
+        });
+      }
+
+      // ⚽ ELIMINATORIAS: ganador correcto = 10 pts
+      if(res.dieciseisavos&&pred.dieciseisavos)PARTIDOS_DIECISEISAVOS.forEach(pa=>{if(res.dieciseisavos[pa.id]&&pred.dieciseisavos[pa.id]===res.dieciseisavos[pa.id])pts+=10;});
       if(res.octavos&&pred.octavos)PARTIDOS_OCTAVOS.forEach(pa=>{if(res.octavos[pa.id]&&pred.octavos[pa.id]===res.octavos[pa.id])pts+=10;});
       if(res.cuartos&&pred.cuartos)PARTIDOS_CUARTOS.forEach(pa=>{if(res.cuartos[pa.id]&&pred.cuartos[pa.id]===res.cuartos[pa.id])pts+=10;});
       if(res.semis&&pred.semis)PARTIDOS_SEMIS.forEach(pa=>{if(res.semis[pa.id]&&pred.semis[pa.id]===res.semis[pa.id])pts+=10;});
-      const rf=res.final,pf=pred.final||{};
+
+      // 🏆 FINAL
+      const rf=res.final||{},pf=pred.final||{};
       const finalistas=[rf.campeon,rf.subcampeon].filter(Boolean);
       const predFinalistas=[pf.campeon,pf.subcampeon].filter(Boolean);
       if(finalistas.length===2&&predFinalistas.length===2&&finalistas.every(e=>predFinalistas.includes(e)))pts+=15;
       if(rf.campeon&&pf.campeon===rf.campeon)pts+=15;
       if(rf.goleador&&pf.goleador&&pf.goleador.toLowerCase().trim()===rf.goleador.toLowerCase().trim())pts+=20;
+
       t.puntos=pts;total++;
     });
   });
