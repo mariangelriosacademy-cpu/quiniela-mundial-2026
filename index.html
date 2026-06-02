@@ -698,11 +698,13 @@ function normalizarCedula(raw){
 }
 
 // ===== REGISTRO =====
-function buscarORegistrar(){
+async function buscarORegistrar(){
   const cedula=normalizarCedula(document.getElementById('reg-cedula').value);
   document.getElementById('reg-cedula').value=cedula;
   if(!cedula){mostrarAlerta('alerta-registro','Ingresa tu cédula','err');return;}
-  // Limpiar participantes con cédulas no normalizadas
+  // Sincronizar con Supabase antes de buscar para tener datos frescos
+  mostrarAlerta('alerta-registro','🔄 Verificando datos...','info');
+  await sincronizarDesdeSupabase();
   limpiarCedulasDuplicadas();
   const participantes=getParticipantes();
   const zona=document.getElementById('zona-registro');
@@ -1417,9 +1419,12 @@ function renderRankingCompleto(){
 }
 
 // ===== CONSULTA =====
-function consultarParticipante(){
+async function consultarParticipante(){
   const cedula=normalizarCedula(document.getElementById('consulta-cedula').value);
   document.getElementById('consulta-cedula').value=cedula;
+  // Sincronizar con Supabase antes de consultar
+  document.getElementById('resultado-consulta').innerHTML='<div class="alerta alerta-info">🔄 Buscando...</div>';
+  await sincronizarDesdeSupabase();
   const participantes=getParticipantes();
   const res=document.getElementById('resultado-consulta');
   if(!participantes[cedula]){res.innerHTML='<div class="alerta alerta-err">No se encontró ningún participante con esa cédula</div>';return;}
@@ -1577,8 +1582,24 @@ function eliminarTarjeton(cedula,codigo){
   </div>`;
   document.body.appendChild(modal);
   
-  document.getElementById('btn-confirmar-eliminar').onclick = () => {
+  document.getElementById('btn-confirmar-eliminar').onclick = async () => {
     modal.remove();
+    mostrarToast('🗑️ Eliminando...');
+    // Eliminar de Supabase PRIMERO y esperar confirmación
+    if(window._supa){
+      try {
+        if(soloUnTarjeton){
+          await window._supa.from('participantes').delete().eq('cedula',cedula);
+          // Eliminar predicciones de Supabase también
+          await window._supa.from('predicciones').delete().eq('cedula',cedula);
+        } else {
+          const tarjetonesRestantes = p.tarjetones.filter(t=>t.codigo!==codigo);
+          await window._supa.from('participantes').upsert({cedula,nombre:p.nombre,tel:p.tel,fecha_reg:p.fechaReg||'',tarjetones:tarjetonesRestantes},{onConflict:'cedula'});
+          await window._supa.from('predicciones').delete().eq('codigo',codigo);
+        }
+      } catch(e){ console.warn('Error eliminando de Supabase:',e); }
+    }
+    // Luego eliminar del localStorage
     localStorage.removeItem('q26_pred_'+codigo);
     if(soloUnTarjeton){
       delete participantes[cedula];
@@ -1586,18 +1607,10 @@ function eliminarTarjeton(cedula,codigo){
       p.tarjetones=p.tarjetones.filter(t=>t.codigo!==codigo);
     }
     setParticipantes(participantes);
-    // Eliminar de Supabase también
-    if(window._supa){
-      if(soloUnTarjeton){
-        window._supa.from('participantes').delete().eq('cedula',cedula).catch(e=>console.warn(e));
-      } else {
-        window._supa.from('participantes').upsert({cedula,nombre:p.nombre,tel:p.tel,fecha_reg:p.fechaReg||'',tarjetones:p.tarjetones},{onConflict:'cedula'}).catch(e=>console.warn(e));
-      }
-    }
     renderParticipantesAdmin();
     actualizarRankingPublico();
     renderStatsAdmin();
-    mostrarToast('🗑️ '+(soloUnTarjeton?`${nombre} eliminado`:`Tarjetón ${codigo} eliminado`));
+    mostrarToast('🗑️ '+(soloUnTarjeton?`${nombre} eliminado correctamente`:`Tarjetón ${codigo} eliminado`));
   };
 }
 function verPredsAdmin(cedula,codigo){
