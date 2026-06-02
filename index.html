@@ -2706,19 +2706,14 @@ function mostrarLockPartido(localNombre, visitaNombre){
 }
 
 // ===== INIT =====
-document.addEventListener('DOMContentLoaded', function() {
-  // NO cargar precio desde localStorage al inicio — esperar Supabase para evitar parpadeo
-  // Solo mostrar ranking público inmediatamente
-  actualizarRankingPublico();
+document.addEventListener('DOMContentLoaded', async function() {
   renderCalendario();
   iniciarContador();
+  // Sincronizar desde Supabase PRIMERO antes de mostrar datos
+  await sincronizarDesdeSupabase();
+  actualizarHeroPrecio();
+  actualizarRankingPublico();
   renderStatsPredicciones();
-  // Sincronizar desde Supabase al inicio
-  setTimeout(async()=>{
-    await sincronizarDesdeSupabase();
-    actualizarHeroPrecio(); // Mostrar precio correcto desde Supabase
-    actualizarRankingPublico();
-  }, 1500);
   // Iniciar actualización automática de resultados via API
   setTimeout(iniciarActualizacionAutomatica, 3000);
   // Sincronizar con Firebase en segundo plano después de 1 segundo
@@ -2748,14 +2743,12 @@ async function sincronizarDesdeSupabase() {
   try {
     const {data: parts} = await _supa.from('participantes').select('*');
     if(parts && parts.length > 0) {
-      // Fusionar con localStorage — no borrar participantes eliminados localmente
+      // Siempre traer todos los datos de Supabase y fusionar con localStorage
       const localParts = leer('q26_participantes', {});
-      const obj = {...localParts}; // Empezar con datos locales
+      const obj = {...localParts};
       parts.forEach(p => {
-        // Solo agregar de Supabase si no fue eliminado localmente
-        if(!localParts || localParts[p.cedula] !== undefined || Object.keys(localParts).length === 0) {
-          obj[p.cedula] = {cedula:p.cedula, nombre:p.nombre, tel:p.tel, fechaReg:p.fecha_reg, tarjetones:p.tarjetones||[]};
-        }
+        // Supabase es la fuente de verdad — siempre agregar/actualizar
+        obj[p.cedula] = {cedula:p.cedula, nombre:p.nombre, tel:p.tel, fechaReg:p.fecha_reg, tarjetones:p.tarjetones||[]};
       });
       localStorage.setItem('q26_participantes', JSON.stringify(obj));
     }
