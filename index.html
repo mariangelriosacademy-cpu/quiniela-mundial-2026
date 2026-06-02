@@ -491,7 +491,12 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--fondo); co
 </div>
 
 <!-- MODALES -->
-<div class="modal-overlay" id="modal-login"><div class="modal"><button class="modal-close" onclick="cerrarModal('modal-login')">×</button><h2>🔐 Acceso Admin</h2><div class="form-group"><label>Contraseña</label><input type="password" id="admin-pass" placeholder="Contraseña..." /></div><div id="login-error"></div><button class="btn-accion" onclick="loginAdmin()">Ingresar</button></div></div>
+<div class="modal-overlay" id="modal-login"><div class="modal"><button class="modal-close" onclick="cerrarModal('modal-login')">×</button><h2>🔐 Acceso Admin</h2><div class="form-group"><label>Contraseña</label>
+  <div style="position:relative;">
+    <input type="password" id="admin-pass" placeholder="Contraseña..." style="padding-right:44px;"/>
+    <button type="button" onclick="togglePass('admin-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;">👁</button>
+  </div>
+</div><div id="login-error"></div><button class="btn-accion" onclick="loginAdmin()">Ingresar</button></div></div>
 <div class="modal-overlay" id="modal-ranking"><div class="modal" style="max-width:600px"><button class="modal-close" onclick="cerrarModal('modal-ranking')">×</button><h2>🏅 Tabla completa</h2><div id="ranking-completo-modal" style="margin-top:12px"></div></div></div>
 <div class="modal-overlay" id="modal-pred-view"><div class="modal" style="max-width:600px"><button class="modal-close" onclick="cerrarModal('modal-pred-view')">×</button><h2>👁 Predicciones</h2><div id="pred-view-content" style="margin-top:12px"></div></div></div>
 
@@ -712,9 +717,15 @@ async function buscarORegistrar(){
   if(!cedula){mostrarAlerta('alerta-registro','Ingresa tu cédula','err');return;}
   // Sincronizar con Supabase antes de buscar para tener datos frescos
   mostrarAlerta('alerta-registro','🔄 Verificando datos...','info');
-  // Verificar lista negra primero
+  // Verificar lista negra primero — siempre, incluso si está en localStorage
   const bloqueado = await estaBloquedado(cedula);
   if(bloqueado){
+    // Eliminar del localStorage también para que no vuelva
+    const partsLocal = leer('q26_participantes',{});
+    if(partsLocal[cedula]){
+      delete partsLocal[cedula];
+      localStorage.setItem('q26_participantes', JSON.stringify(partsLocal));
+    }
     mostrarAlerta('alerta-registro','❌ Este registro fue cancelado. Contacta al organizador.','err');
     return;
   }
@@ -2101,6 +2112,18 @@ function deshacerLimpiar(){
     setTimeout(()=>document.getElementById('resultado-calculo').innerHTML='',4000);
     mostrarToast('✅ ¡Deshecho! Resultados restaurados');
   }catch(e){mostrarToast('❌ Error al restaurar: '+e.message);}
+}
+
+function togglePass(id, btn){
+  const input = document.getElementById(id);
+  if(!input) return;
+  if(input.type === 'password'){
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁';
+  }
 }
 
 function mostrarToast(msg){
