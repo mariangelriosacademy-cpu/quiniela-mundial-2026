@@ -465,6 +465,14 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--fondo); co
       <div style="margin-top:16px;">
         <button class="btn-accion btn-verde" onclick="calcularPuntos()">🔄 Calcular y actualizar puntos</button>
         <div style="margin-top:24px;padding-top:16px;border-top:2px dashed #e0e0e0;">
+          <div style="background:white;border-radius:12px;padding:14px;margin-bottom:12px;border-left:4px solid #6f42c1;">
+            <div style="font-weight:700;font-size:0.9rem;margin-bottom:8px;color:#6f42c1;">🔓 Reactivar participante bloqueado</div>
+            <p style="font-size:0.82rem;color:#666;margin-bottom:10px;">Si eliminaste a alguien por error, ingresa su cédula para reactivarlo.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <input type="text" id="cedula-reactivar" placeholder="Ej: V-12345678" style="flex:1;min-width:150px;padding:10px;border:2px solid var(--gris);border-radius:8px;font-size:0.85rem;"/>
+              <button class="btn-accion btn-sm" style="background:#6f42c1;width:auto;" onclick="reactivarParticipante(normalizarCedula(document.getElementById('cedula-reactivar').value))">✅ Reactivar</button>
+            </div>
+          </div>
           <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">⚠️ Zona peligrosa — úsalo solo si necesitas reiniciar todo</p>
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
             <button class="btn-accion btn-sm" style="background:#dc3545;width:auto;" onclick="limpiarResultados()">🗑️ Limpiar todos los resultados</button>
@@ -704,6 +712,12 @@ async function buscarORegistrar(){
   if(!cedula){mostrarAlerta('alerta-registro','Ingresa tu cédula','err');return;}
   // Sincronizar con Supabase antes de buscar para tener datos frescos
   mostrarAlerta('alerta-registro','🔄 Verificando datos...','info');
+  // Verificar lista negra primero
+  const bloqueado = await estaBloquedado(cedula);
+  if(bloqueado){
+    mostrarAlerta('alerta-registro','❌ Este registro fue cancelado. Contacta al organizador.','err');
+    return;
+  }
   await sincronizarDesdeSupabase();
   limpiarCedulasDuplicadas();
   const participantes=getParticipantes();
@@ -1558,6 +1572,30 @@ function cambiarEstado(cedula,codigo,estado){
   if(t){t.estado=estado;setParticipantes(participantes);renderParticipantesAdmin();actualizarRankingPublico();}
 }
 
+async function reactivarParticipante(cedula){
+  // Quitar de lista negra y reactivar
+  await desbloquearEnSupabase(cedula);
+  const participantes=getParticipantes();
+  if(participantes[cedula]){
+    // Si existe localmente, solo desbloquear
+    mostrarToast('✅ '+cedula+' reactivado');
+    renderParticipantesAdmin();
+    return;
+  }
+  // Si no existe localmente, intentar recuperar de Supabase
+  if(window._supa){
+    const {data} = await window._supa.from('participantes').select('*').eq('cedula',cedula).maybeSingle();
+    if(data){
+      participantes[cedula] = {cedula:data.cedula, nombre:data.nombre, tel:data.tel, fechaReg:data.fecha_reg, tarjetones:data.tarjetones||[]};
+      setParticipantes(participantes);
+      mostrarToast('✅ '+data.nombre+' reactivado');
+      renderParticipantesAdmin();
+      return;
+    }
+  }
+  mostrarToast('⚠️ No se encontró el registro en Supabase');
+}
+
 function eliminarTarjeton(cedula,codigo){
   const participantes=getParticipantes();
   const p=participantes[cedula];
@@ -1590,8 +1628,9 @@ function eliminarTarjeton(cedula,codigo){
       try {
         if(soloUnTarjeton){
           await window._supa.from('participantes').delete().eq('cedula',cedula);
-          // Eliminar predicciones de Supabase también
           await window._supa.from('predicciones').delete().eq('cedula',cedula);
+          // Agregar a lista negra para bloquear acceso desde cualquier dispositivo
+          await bloquearEnSupabase(cedula);
         } else {
           const tarjetonesRestantes = p.tarjetones.filter(t=>t.codigo!==codigo);
           await window._supa.from('participantes').upsert({cedula,nombre:p.nombre,tel:p.tel,fecha_reg:p.fechaReg||'',tarjetones:tarjetonesRestantes},{onConflict:'cedula'});
@@ -2776,6 +2815,29 @@ async function sincronizarDesdeSupabase() {
     renderStatsPredicciones();
     console.log('✅ Supabase sincronizado — datos en la nube cargados');
   } catch(e) { console.warn('Sync error:', e); }
+}
+
+async function estaBloquedado(cedula) {
+  // Verificar si la cédula está en la lista negra de Supabase
+  if(!_supa) return false;
+  try {
+    const {data} = await _supa.from('bloqueados').select('cedula').eq('cedula', cedula).maybeSingle();
+    return !!data;
+  } catch(e) { return false; }
+}
+
+async function bloquearEnSupabase(cedula) {
+  if(!_supa) return;
+  try {
+    await _supa.from('bloqueados').upsert({cedula, fecha: new Date().toISOString()}, {onConflict:'cedula'});
+  } catch(e) { console.warn('Error bloqueando:', e); }
+}
+
+async function desbloquearEnSupabase(cedula) {
+  if(!_supa) return;
+  try {
+    await _supa.from('bloqueados').delete().eq('cedula', cedula);
+  } catch(e) { console.warn('Error desbloqueando:', e); }
 }
 
 async function guardarEnSupabase(tipo, datos) {
