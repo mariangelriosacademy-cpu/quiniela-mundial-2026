@@ -1533,10 +1533,11 @@ function renderParticipantesAdmin(){
     (p.tarjetones||[]).forEach(t=>{
       if(filtro&&t.estado!==filtro)return;
       filas.push(`<tr><td><strong>${t.codigo}</strong></td><td>${p.nombre}</td><td>${p.cedula}</td><td>${p.tel}</td><td><span class="badge badge-${t.estado}">${t.estado}</span></td><td style="font-weight:700;color:var(--rojo)">${t.puntos}</td><td style="white-space:nowrap">
-        ${t.estado!=='verificado'?`<button class="btn-accion btn-verde btn-sm" onclick="cambiarEstado('${p.cedula}','${t.codigo}','verificado')" style="margin:2px">✅</button>`:''}
-        ${t.estado!=='rechazado'?`<button class="btn-accion btn-sm" onclick="cambiarEstado('${p.cedula}','${t.codigo}','rechazado')" style="margin:2px">❌</button>`:''}
-        <button class="btn-accion btn-azul btn-sm" onclick="verPredsAdmin('${p.cedula}','${t.codigo}')" style="margin:2px">👁</button>
-        <button class="btn-accion btn-sm" style="margin:2px;background:#dc3545" onclick="eliminarTarjeton('${p.cedula}','${t.codigo}')">🗑️</button>
+        ${t.estado!=='verificado'?`<button class="btn-accion btn-verde btn-sm" onclick="cambiarEstado('${p.cedula}','${t.codigo}','verificado')" style="margin:2px" title="Aprobar">✅</button>`:''}
+        ${t.estado!=='rechazado'?`<button class="btn-accion btn-sm" onclick="cambiarEstado('${p.cedula}','${t.codigo}','rechazado')" style="margin:2px" title="Rechazar">❌</button>`:''}
+        <button class="btn-accion btn-azul btn-sm" onclick="verPredsAdmin('${p.cedula}','${t.codigo}')" style="margin:2px" title="Ver predicciones">👁</button>
+        <button class="btn-accion btn-sm" style="margin:2px;background:#fd7e14" onclick="toggleBloqueo('${p.cedula}')" id="btn-bloqueo-${p.cedula}" title="Bloquear/Desbloquear">🚫</button>
+        <button class="btn-accion btn-sm" style="margin:2px;background:#dc3545" onclick="eliminarTarjeton('${p.cedula}','${t.codigo}')" title="Eliminar">🗑️</button>
       </td></tr>`);
     });
   });
@@ -1581,6 +1582,23 @@ function cambiarEstado(cedula,codigo,estado){
   const participantes=getParticipantes();
   const t=participantes[cedula]?.tarjetones?.find(t=>t.codigo===codigo);
   if(t){t.estado=estado;setParticipantes(participantes);renderParticipantesAdmin();actualizarRankingPublico();}
+}
+
+async function toggleBloqueo(cedula){
+  const bloqueado = await estaBloquedado(cedula);
+  if(bloqueado){
+    // Desbloquear
+    await desbloquearEnSupabase(cedula);
+    mostrarToast('✅ '+cedula+' desbloqueado — puede volver a entrar');
+  } else {
+    // Bloquear
+    await bloquearEnSupabase(cedula);
+    // Eliminar del localStorage de este dispositivo también
+    const partsLocal = leer('q26_participantes',{});
+    // No eliminamos localmente — solo bloqueamos el acceso
+    mostrarToast('🚫 '+cedula+' bloqueado — no puede entrar desde ningún dispositivo');
+  }
+  renderParticipantesAdmin();
 }
 
 async function reactivarParticipante(cedula){
@@ -2841,12 +2859,15 @@ async function sincronizarDesdeSupabase() {
 }
 
 async function estaBloquedado(cedula) {
-  // Verificar si la cédula está en la lista negra de Supabase
   if(!_supa) return false;
   try {
-    const {data} = await _supa.from('bloqueados').select('cedula').eq('cedula', cedula).maybeSingle();
-    return !!data;
-  } catch(e) { return false; }
+    const {data, error} = await _supa.from('bloqueados').select('cedula').eq('cedula', cedula);
+    if(error) { console.warn('Error verificando bloqueo:', error); return false; }
+    return data && data.length > 0;
+  } catch(e) { 
+    console.warn('estaBloquedado error:', e); 
+    return false; 
+  }
 }
 
 async function bloquearEnSupabase(cedula) {
