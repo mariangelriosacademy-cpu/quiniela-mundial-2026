@@ -355,6 +355,13 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--fondo); co
       </div>
       <!-- Contenedor del grupo actual -->
       <div id="grupos-container"></div>
+      <!-- Goleador — se predice desde el inicio -->
+      <div id="goleador-box" style="background:white;border-radius:14px;padding:14px;margin-top:12px;border:2px solid var(--dorado);">
+        <div style="font-size:0.85rem;font-weight:700;color:var(--azul);margin-bottom:8px;">⚽ ¿Quién será el máximo goleador del Mundial? <span style="font-size:0.72rem;color:#888;">(+20 pts)</span></div>
+        <input type="text" id="goleador-grupos" placeholder="Escribe el nombre del jugador..." 
+          style="width:100%;padding:10px;border:2px solid var(--gris);border-radius:10px;font-size:0.85rem;box-sizing:border-box;"/>
+        <div id="goleador-guardado" style="margin-top:6px;font-size:0.75rem;color:#28a745;font-weight:600;display:none;"></div>
+      </div>
       <!-- Botones guardar -->
       <div style="display:flex;gap:10px;margin-top:12px;">
         <button onclick="guardarFase('grupos')" style="flex:1;background:var(--rojo);color:white;border:none;padding:12px;border-radius:20px;font-size:0.9rem;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(200,16,46,0.35);">💾 Guardar este grupo</button>
@@ -972,6 +979,20 @@ function renderGruposPredicciones(){
 
 
   document.getElementById('grupos-container').innerHTML = tarjetas + referenciaHTML;
+  
+  // Cargar goleador guardado
+  const goleadorInp = document.getElementById('goleador-grupos');
+  const goleadorGuardado = document.getElementById('goleador-guardado');
+  const goleadorVal = pred.final?.goleador || '';
+  if(goleadorInp) goleadorInp.value = goleadorVal;
+  if(goleadorGuardado){
+    if(goleadorVal){
+      goleadorGuardado.textContent = '✅ Guardado: ' + goleadorVal;
+      goleadorGuardado.style.display = 'block';
+    } else {
+      goleadorGuardado.style.display = 'none';
+    }
+  }
   } catch(e){
     console.error('Error renderGrupos:', e);
     document.getElementById('grupos-container').innerHTML = '<div class="alerta alerta-warn">Error: '+e.message+'</div>';
@@ -1120,6 +1141,12 @@ function guardarFase(fase){
 
 
 
+    // Guardar goleador si fue ingresado
+    const goleadorInput = document.getElementById('goleador-grupos');
+    if(goleadorInput && goleadorInput.value.trim()){
+      if(!pred.final) pred.final = {};
+      pred.final.goleador = goleadorInput.value.trim();
+    }
     setPredicciones(tarjetonActual.codigo, pred);
     mostrarToast(`✅ ${jornada.titulo} guardada`);
     actualizarProgreso();
