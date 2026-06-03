@@ -1141,12 +1141,16 @@ function guardarFase(fase){
 
 
 
-    // Guardar goleador si fue ingresado
+    // Validar goleador obligatorio
     const goleadorInput = document.getElementById('goleador-grupos');
-    if(goleadorInput && goleadorInput.value.trim()){
-      if(!pred.final) pred.final = {};
-      pred.final.goleador = goleadorInput.value.trim();
+    const goleadorVal = goleadorInput?.value.trim() || pred.final?.goleador || '';
+    if(!goleadorVal){
+      mostrarAlerta('alerta-pred','⚠️ Escribe el nombre del máximo goleador antes de guardar.','warn');
+      goleadorInput?.focus();
+      return;
     }
+    if(!pred.final) pred.final = {};
+    pred.final.goleador = goleadorVal;
     setPredicciones(tarjetonActual.codigo, pred);
     mostrarToast(`✅ ${jornada.titulo} guardada`);
     actualizarProgreso();
