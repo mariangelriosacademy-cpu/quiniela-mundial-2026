@@ -1115,9 +1115,9 @@ function renderFinalPredicciones(){
 function guardarFase(fase){
   // Predicciones bloqueadas — el plazo venció el 10 de junio de 2026
   mostrarAlerta('alerta-pred','🔒 El plazo para predicciones venció el 10 de junio de 2026.','warn');
-  return;
-  const fechaLimite=new Date('2026-06-09T03:59:59Z');
-  const pred=getPredicciones(tarjetonActual.codigo);
+  return; // Predicciones bloqueadas
+const fechaLimite=new Date('2026-06-09T03:59:59Z');
+const pred=getPredicciones(tarjetonActual.codigo);
 
   if(fase==='grupos'){
     // Guardar la jornada actual — todos los partidos visibles
@@ -2953,4 +2953,6 @@ async function guardarEnSupabase(tipo, datos) {
 })();
 </script>
 </body>
+
+  
 </html>
