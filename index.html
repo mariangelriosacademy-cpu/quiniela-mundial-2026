@@ -1113,8 +1113,10 @@ function renderFinalPredicciones(){
 // Auto-guardado eliminado — solo se guarda con el botón
 
 function guardarFase(fase){
-  const fechaLimite=new Date('2026-06-09T03:59:59Z'); // 10 Jun 23:59 hora Venezuela (UTC-4)
-  if(new Date()>fechaLimite){mostrarAlerta('alerta-pred','🔒 El plazo venció el 10 de junio de 2026.','warn');return;}
+  // Predicciones bloqueadas — el plazo venció el 10 de junio de 2026
+  mostrarAlerta('alerta-pred','🔒 El plazo para predicciones venció el 10 de junio de 2026.','warn');
+  return;
+  const fechaLimite=new Date('2026-06-09T03:59:59Z');
   const pred=getPredicciones(tarjetonActual.codigo);
 
   if(fase==='grupos'){
